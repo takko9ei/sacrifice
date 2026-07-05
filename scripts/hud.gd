@@ -35,7 +35,7 @@ func _on_toggled(_id: String) -> void:
 	_play_flash()
 
 
-func _on_state_changed() -> void:
+func _on_state_changed(_value = null) -> void:
 	_refresh_label()
 
 

@@ -1,10 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://bvdur1gdqu4xr"]
 
-[ext_resource type="Script" path="res://scripts/test_room.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://ckt6hlqlmj37f" path="res://scenes/Player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/BlueObject.tscn" id="3"]
-[ext_resource type="Script" path="res://scripts/sacrifice_input.gd" id="4"]
+[ext_resource type="Script" uid="uid://bca3u5fmpjuu4" path="res://scripts/sacrifice_input.gd" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/Altar.tscn" id="6"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(900, 40)
@@ -12,101 +12,110 @@ size = Vector2(900, 40)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_platform"]
 size = Vector2(100, 20)
 
-[node name="TestRoom" type="Node2D"]
-script = ExtResource("1")
+[node name="TestRoom" type="Node2D" unique_id=696241285]
 
-[node name="Ground" type="StaticBody2D" parent="."]
-collision_layer = 1
-collision_mask = 0
+[node name="Ground" type="StaticBody2D" parent="." unique_id=1022151289]
 position = Vector2(0, 300)
+collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground" unique_id=1352400078]
 shape = SubResource("RectangleShape2D_ground")
 
-[node name="Visual" type="Polygon2D" parent="Ground"]
+[node name="Visual" type="Polygon2D" parent="Ground" unique_id=1571898456]
 color = Color(0.29, 0.29, 0.33, 1)
 polygon = PackedVector2Array(-450, -20, 450, -20, 450, 20, -450, 20)
 
-[node name="Ceiling" type="StaticBody2D" parent="."]
-collision_layer = 1
-collision_mask = 0
+[node name="Ceiling" type="StaticBody2D" parent="." unique_id=1345024240]
 position = Vector2(0, -40)
+collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ceiling"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ceiling" unique_id=1437608818]
 shape = SubResource("RectangleShape2D_ground")
 
-[node name="Visual" type="Polygon2D" parent="Ceiling"]
+[node name="Visual" type="Polygon2D" parent="Ceiling" unique_id=1721242691]
 color = Color(0.29, 0.29, 0.33, 1)
 polygon = PackedVector2Array(-450, -20, 450, -20, 450, 20, -450, 20)
 
-[node name="PlatformA" type="StaticBody2D" parent="."]
-collision_layer = 1
+[node name="PlatformA" type="StaticBody2D" parent="." unique_id=1383001149]
+position = Vector2(-148, 215)
 collision_mask = 0
-position = Vector2(-150, 230)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformA"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformA" unique_id=10743525]
 shape = SubResource("RectangleShape2D_platform")
 
-[node name="Visual" type="Polygon2D" parent="PlatformA"]
+[node name="Visual" type="Polygon2D" parent="PlatformA" unique_id=350396627]
 color = Color(0.35, 0.42, 0.5, 1)
 polygon = PackedVector2Array(-50, -10, 50, -10, 50, 10, -50, 10)
 
-[node name="PlatformB" type="StaticBody2D" parent="."]
-collision_layer = 1
-collision_mask = 0
+[node name="PlatformB" type="StaticBody2D" parent="." unique_id=1103828317]
 position = Vector2(50, 160)
+collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformB"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformB" unique_id=1772559588]
 shape = SubResource("RectangleShape2D_platform")
 
-[node name="Visual" type="Polygon2D" parent="PlatformB"]
+[node name="Visual" type="Polygon2D" parent="PlatformB" unique_id=597879074]
 color = Color(0.35, 0.42, 0.5, 1)
 polygon = PackedVector2Array(-50, -10, 50, -10, 50, 10, -50, 10)
 
-[node name="PlatformC" type="StaticBody2D" parent="."]
-collision_layer = 1
-collision_mask = 0
+[node name="PlatformC" type="StaticBody2D" parent="." unique_id=171686913]
 position = Vector2(230, 220)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformC"]
-shape = SubResource("RectangleShape2D_platform")
-
-[node name="Visual" type="Polygon2D" parent="PlatformC"]
-color = Color(0.35, 0.42, 0.5, 1)
-polygon = PackedVector2Array(-50, -10, 50, -10, 50, 10, -50, 10)
-
-[node name="PlatformD" type="StaticBody2D" parent="."]
-collision_layer = 1
 collision_mask = 0
-position = Vector2(400, 140)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformD"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformC" unique_id=479500584]
 shape = SubResource("RectangleShape2D_platform")
 
-[node name="Visual" type="Polygon2D" parent="PlatformD"]
+[node name="Visual" type="Polygon2D" parent="PlatformC" unique_id=1825495586]
 color = Color(0.35, 0.42, 0.5, 1)
 polygon = PackedVector2Array(-50, -10, 50, -10, 50, 10, -50, 10)
 
-[node name="BlueWallLeft" parent="." instance=ExtResource("3")]
-position = Vector2(-320, 244)
-scale = Vector2(1, 4)
+[node name="PlatformD" type="StaticBody2D" parent="." unique_id=792381078]
+position = Vector2(400, 140)
+collision_mask = 0
 
-[node name="BlueWallMid" parent="." instance=ExtResource("3")]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformD" unique_id=1121630823]
+shape = SubResource("RectangleShape2D_platform")
+
+[node name="Visual" type="Polygon2D" parent="PlatformD" unique_id=1342074231]
+color = Color(0.35, 0.42, 0.5, 1)
+polygon = PackedVector2Array(-50, -10, 50, -10, 50, 10, -50, 10)
+
+[node name="BlueWallMid" parent="." unique_id=1985591328 instance=ExtResource("3")]
 position = Vector2(130, 244)
 scale = Vector2(1, 4)
 
-[node name="BluePlatform1" parent="." instance=ExtResource("3")]
+[node name="BluePlatform1" parent="." unique_id=1985424904 instance=ExtResource("3")]
 position = Vector2(-380, 200)
 scale = Vector2(2, 1)
 
-[node name="BluePlatform2" parent="." instance=ExtResource("3")]
+[node name="BluePlatform2" parent="." unique_id=358159285 instance=ExtResource("3")]
 position = Vector2(250, 264)
 scale = Vector2(2, 1)
 
-[node name="SacrificeInput" type="Node" parent="."]
+[node name="AltarGravity" parent="." unique_id=811795208 instance=ExtResource("6")]
+position = Vector2(-320, 248)
+concept_id = "gravity"
+message = "Press E to Sacrifice (Enables Anti-Gravity by pressing 1, reversible)"
+
+[node name="AltarBlue" parent="." unique_id=806985902 instance=ExtResource("6")]
+position = Vector2(-240, 248)
+concept_id = "blue"
+message = "Press E to Sacrifice (Press 2 to Clear Blue, reversible)"
+
+[node name="AltarDoubleSlots" parent="." unique_id=996871431 instance=ExtResource("6")]
+position = Vector2(60, 248)
+action = 1
+message = "Press E to Sacrifice Jump (Gains 2 Sacrifice Slots, unreversible)"
+
+[node name="AltarSacrificeJump" parent="." unique_id=318371265 instance=ExtResource("6")]
+position = Vector2(60, 248)
+action = 2
+concept_id = "jump"
+
+[node name="SacrificeInput" type="Node" parent="." unique_id=682276743]
 script = ExtResource("4")
 
-[node name="HUD" parent="." instance=ExtResource("5")]
+[node name="HUD" parent="." unique_id=384873401 instance=ExtResource("5")]
 
-[node name="Player" parent="." instance=ExtResource("2")]
+[node name="Player" parent="." unique_id=1311105246 instance=ExtResource("2")]
 position = Vector2(-380, 260)

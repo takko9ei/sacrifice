@@ -1,4 +1,5 @@
 extends CharacterBody2D
+class_name Player
 # Player movement controller: ground/air acceleration+friction, split-gravity
 # jump (GDD §3.2), coyote time, jump buffer, variable jump height, and the
 # `gravity` sacrifice (GDD §2.6, §3.5). Every feel number comes from
@@ -90,7 +91,7 @@ func _update_timers(delta: float) -> void:
 		_coyote_timer = config.coyote_time
 	else:
 		_coyote_timer = max(_coyote_timer - delta, 0.0)
-	if Input.is_action_just_pressed("jump"):
+	if Input.is_action_just_pressed("jump") and not Sacrifice.is_permanently_sacrificed("jump"):
 		_jump_buffer_timer = config.jump_buffer_time
 	else:
 		_jump_buffer_timer = max(_jump_buffer_timer - delta, 0.0)
