@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="sacrifice"
-run/main_scene="res://scenes/IntegrationLevel.tscn"
+run/main_scene="uid://bvdur1gdqu4xr"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 

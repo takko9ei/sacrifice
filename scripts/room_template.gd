@@ -25,7 +25,7 @@ extends Node2D
 #    reactive-object template (GDD §8.6). It goes solid/transparent based on
 #    whichever `concept_id` you set on it; scale the node to resize it
 #    (both its collision shape and visual scale together). Copy this file to
-#    react to a different concept: see observation_gate.gd for the same
-#    pattern reacting to a permanent sacrifice instead of a toggle.
+#    react to a different concept, or see hud_collapse_platforms.gd for a
+#    different reactive shape (spawning geometry instead of toggling it).
 # 5. Never touch sacrifice_manager.gd, altar.gd, or blue_object.gd to make a
 #    new room — if you find yourself wanting to, something's off; ask.

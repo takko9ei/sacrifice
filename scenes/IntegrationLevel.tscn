@@ -7,9 +7,13 @@
 [ext_resource type="Script" uid="uid://bca3u5fmpjuu4" path="res://scripts/sacrifice_input.gd" id="5"]
 [ext_resource type="Script" uid="uid://7t584lu6e6nx" path="res://scripts/restart_controller.gd" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/EndingSequence.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/HudCollapsePlatforms.tscn" id="8"]
 
 [sub_resource type="RectangleShape2D" id="Shape_Safety"]
 size = Vector2(2000, 40)
+
+[sub_resource type="RectangleShape2D" id="Shape_HudLedge"]
+size = Vector2(120, 20)
 
 [sub_resource type="RectangleShape2D" id="Shape_R1Ground"]
 size = Vector2(550, 40)
@@ -104,6 +108,33 @@ message = "Press E to Sacrifice Blue (Press 2 to Clear Blue, reversible)"
 [node name="BlueWallR3" parent="." unique_id=321352728 instance=ExtResource("2")]
 position = Vector2(750, 244)
 scale = Vector2(1, 4)
+
+[node name="HudLedge" type="StaticBody2D" parent="."]
+position = Vector2(820, 100)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HudLedge"]
+shape = SubResource("Shape_HudLedge")
+
+[node name="Visual" type="Polygon2D" parent="HudLedge"]
+color = Color(0.35, 0.42, 0.5, 1)
+polygon = PackedVector2Array(-60, -10, 60, -10, 60, 10, -60, 10)
+
+[node name="AltarHud" parent="." instance=ExtResource("3")]
+position = Vector2(800, 248)
+action = 2
+concept_id = "hud"
+message = "Press E to Sacrifice the HUD (Removes status UI, drops bonus platforms, unreversible)"
+
+[node name="HudCollapsePlatforms" parent="." instance=ExtResource("8")]
+position = Vector2(820, 280)
+
+[node name="Drop1" type="Marker2D" parent="HudCollapsePlatforms"]
+position = Vector2(0, -70)
+
+[node name="Drop2" type="Marker2D" parent="HudCollapsePlatforms"]
+position = Vector2(0, -135)
 
 [node name="R4Ground" type="StaticBody2D" parent="." unique_id=155764783]
 position = Vector2(1050, 300)
