@@ -1,18 +1,7 @@
-[gd_resource type="Resource" script_class="PlayerConfig" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PlayerConfig" format=3 uid="uid://c8rcl7vsgo8rk"]
 
-[ext_resource type="Script" path="res://scripts/player_config.gd" id="1"]
+[ext_resource type="Script" uid="uid://dogvcoeuru4ff" path="res://scripts/player_config.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
-move_speed = 180.0
-ground_acceleration = 1800.0
-ground_friction = 2200.0
-air_acceleration = 1200.0
-air_friction = 400.0
-jump_height = 64.0
-time_to_peak = 0.38
-time_to_fall = 0.3
-jump_cut_multiplier = 0.45
-max_fall_speed = 600.0
-coyote_time = 0.1
-jump_buffer_time = 0.1
+jump_height = 74.0

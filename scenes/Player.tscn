@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ckt6hlqlmj37f"]
 
 [ext_resource type="Script" uid="uid://crdnr1jvh4a2f" path="res://scripts/player.gd" id="1"]
-[ext_resource type="Resource" path="res://tuning/default.tres" id="2"]
+[ext_resource type="Resource" uid="uid://c8rcl7vsgo8rk" path="res://tuning/default.tres" id="2"]
 [ext_resource type="SpriteFrames" path="res://assets/player/player_frames.tres" id="3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
@@ -11,6 +11,7 @@ size = Vector2(24, 40)
 collision_layer = 2
 script = ExtResource("1")
 config = ExtResource("2")
+sprite_path = null
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1685294897]
 shape = SubResource("RectangleShape2D_1")

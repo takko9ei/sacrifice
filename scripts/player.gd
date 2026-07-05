@@ -1,9 +1,10 @@
 extends CharacterBody2D
 # Player movement controller: ground/air acceleration+friction, split-gravity
-# jump (GDD §3.2), coyote time, jump buffer, variable jump height. Every feel
-# number comes from `config` (PlayerConfig) — no hardcoded movement/jump
-# numbers here (CLAUDE.md rule 2). Gravity is fixed downward this step: no
-# gravity-flip, no Sacrifice hookup (that is later steps' scope).
+# jump (GDD §3.2), coyote time, jump buffer, variable jump height, and the
+# `gravity` sacrifice (GDD §2.6, §3.5). Every feel number comes from
+# `config` (PlayerConfig) — no hardcoded movement/jump numbers here
+# (CLAUDE.md rule 2). `blue` and other world-facing concepts are not the
+# player's concern (see blue_object.gd / GDD §8.6).
 
 @export var config: PlayerConfig
 @export var sprite_path: NodePath = ^"AnimatedSprite2D"
@@ -19,6 +20,30 @@ func _ready() -> void:
 	if config == null:
 		config = PlayerConfig.new()
 	_sprite = get_node(sprite_path) as AnimatedSprite2D
+	Sacrifice.concept_activated.connect(_on_concept_activated)
+	Sacrifice.concept_deactivated.connect(_on_concept_deactivated)
+
+
+func _on_concept_activated(id: String) -> void:
+	if id != "gravity":
+		return
+	# up_direction reversed so is_on_floor()/floor-snap treat the ceiling as
+	# the floor; velocity.x is left untouched (GDD §3.5).
+	up_direction = Vector2.DOWN
+	if _sprite:
+		_sprite.flip_v = true
+
+
+func _on_concept_deactivated(id: String) -> void:
+	if id != "gravity":
+		return
+	up_direction = Vector2.UP
+	if _sprite:
+		_sprite.flip_v = false
+
+
+func _gravity_sign() -> float:
+	return -1.0 if up_direction == Vector2.DOWN else 1.0
 
 
 func _physics_process(delta: float) -> void:
@@ -50,9 +75,14 @@ func _apply_horizontal_movement(delta: float) -> void:
 
 
 func _apply_gravity(delta: float, gravity_rise: float, gravity_fall: float) -> void:
-	var g: float = gravity_fall if velocity.y >= 0.0 else gravity_rise
-	velocity.y += g * delta
-	velocity.y = min(velocity.y, config.max_fall_speed)
+	# falling_speed is velocity measured along the current gravity direction,
+	# so the rise/fall split and the fall-speed clamp work the same whether
+	# gravity currently points down (normal) or up (flipped).
+	var grav_sign: float = _gravity_sign()
+	var falling_speed: float = velocity.y * grav_sign
+	var g: float = gravity_fall if falling_speed >= 0.0 else gravity_rise
+	falling_speed = min(falling_speed + g * delta, config.max_fall_speed)
+	velocity.y = falling_speed * grav_sign
 
 
 func _update_timers(delta: float) -> void:
@@ -67,11 +97,12 @@ func _update_timers(delta: float) -> void:
 
 
 func _handle_jump_input(jump_velocity: float) -> void:
+	var grav_sign: float = _gravity_sign()
 	if _jump_buffer_timer > 0.0 and _coyote_timer > 0.0:
-		velocity.y = -jump_velocity
+		velocity.y = -jump_velocity * grav_sign
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
-	elif Input.is_action_just_released("jump") and velocity.y < 0.0:
+	elif Input.is_action_just_released("jump") and velocity.y * grav_sign < 0.0:
 		velocity.y *= config.jump_cut_multiplier
 
 
@@ -82,7 +113,7 @@ func _update_animation() -> void:
 	if is_on_floor():
 		anim = "idle" if is_zero_approx(velocity.x) else "run"
 	else:
-		anim = "jump" if velocity.y < 0.0 else "fall"
+		anim = "jump" if velocity.y * _gravity_sign() < 0.0 else "fall"
 	if anim != _current_animation:
 		_current_animation = anim
 		_sprite.play(anim)
