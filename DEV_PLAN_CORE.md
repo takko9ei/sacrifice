@@ -1,207 +1,207 @@
-# 核心开发步骤（你负责的部分）· Vibe Coding 版
+# Core Development Steps (Your Part) · Vibe Coding Edition
 
-> 配套文档：`GDD.md`（权威设计）、`DEV_STATUS.md`（当前实际状态）、`scenes/HOW_TO_BUILD_A_LEVEL.md`（给关卡设计者的搭建教程）
-> 你的目标：做出一个**大体可玩、包含所有核心机制**的版本，然后交给做 gimmick 的人和做地图的人继续。
-> 团队分工：你=游戏核心 / B=gimmick（机关与扩展概念）/ C=地图制作。
-> 前提：`hud` 界面坍塌与 `fourthwall` 结局均属于 MVP 范围，按下列步骤实现。
-
----
-
-## 0. 开始之前（务必先读）
-
-### 0.1 你现在手里已有的东西
-上一轮已产出这些脚本（在 `scripts/`）：`sacrifice_manager.gd`、`player.gd`、`player_config.gd`、`blue_object.gd`、`altar.gd`、`sacrifice_input.gd`、`hud.gd`（文字版）。**本计划是在这套地基上往上盖，不是重写。**
-
-### 0.2 每次开新会话，先给 AI 这段"架构交底"
-因为你不细读代码，最大的风险是 AI 每次重造轮子、把逻辑塞错地方，导致后面交接时 B 和 C 接不上。所以每次让 AI 干活前，先粘这段约束（可存成一个 `AI_CONTEXT.md` 反复用）：
-
-> 这是一个 Godot 4.x GDScript 项目。铁律：
-> 1. 所有牺牲相关状态只存在 `Sacrifice` 单例里，任何系统只通过它的信号通信，不要另建全局状态。
-> 2. 玩家所有手感数值只来自 `PlayerConfig` 资源，代码里不许出现硬编码的移动/跳跃数字。
-> 3. 任何"会对牺牲做出反应的物体"都照 `blue_object.gd` 的模式写：监听信号、过滤自己的 `concept_id`。不要在管理器里加针对具体物体的分支。
-> 4. 单槽/双槽/永久牺牲的规则只在 `sacrifice_manager.gd` 里，别处不许重写。
-> 5. 面向玩家和队友的可配置项都用 `@export` 暴露到 Inspector，并做成可复用的场景（.tscn），不要写死在代码里。
-> 请在这些约束下工作，改动前先说明你要改哪个文件、加什么，不要重写已有系统。
-
-### 0.3 你的验收方式（关键）
-你不 review 代码，所以**每一步的完成判定 = 按该步的"玩一遍"清单逐条实测**。清单里任何一条不对，就把现象丢回给 AI 让它修，不要自己去读源码。每步都附带"回归重测"——因为 vibe coding 很容易改 A 弄坏 B。
-
-### 0.4 交接原则
-你交出去的不是"一堆代码"，而是**一套能用 Inspector 摆弄的预制体 + 每类扩展各一个可抄的样板**。B 和 C 应该几乎不需要写代码就能开工。所以本计划里凡是"做成场景/暴露参数"的要求都不能省——那是交接质量的命脉。
+> Companion docs: `GDD.md` (authoritative design), `DEV_STATUS.md` (current actual state), `scenes/HOW_TO_BUILD_A_LEVEL.md` (build tutorial for level designers)
+> Your goal: produce a version that is **roughly playable and contains all core mechanics**, then hand it off to whoever does gimmicks and whoever does the map.
+> Team split: you = game core / B = gimmicks (mechanisms and extension concepts) / C = map building.
+> Premise: both the `hud` UI collapse and the `fourthwall` ending are in MVP scope — implement them per the steps below.
 
 ---
 
-## 步骤一：项目落地 + 预制体化 + 手感打磨（一次大会话）
+## 0. Before You Start (Read This First)
 
-**目标**：项目能跑，角色在测试房里移动/跳跃手感良好，且所有核心对象都变成可复用场景。
+### 0.1 What You Already Have on Hand
+The previous round already produced these scripts (in `scripts/`): `sacrifice_manager.gd`, `player.gd`, `player_config.gd`, `blue_object.gd`, `altar.gd`, `sacrifice_input.gd`, `hud.gd` (text version). **This plan builds on top of that foundation — it is not a rewrite.**
 
-**交付物**：
-- 建好项目目录结构：autoload `Sacrifice`、Input Map、主场景、`scripts/`+`scenes/`+`tuning/` 目录结构。
-- 把散脚本做成预制体场景：`Player.tscn`（CharacterBody2D + CollisionShape2D + **AnimatedSprite2D 占位** + Camera2D，`sprite_path` 指向那个 AnimatedSprite2D）、`Altar.tscn`、`BlueObject.tscn`、`HUD.tscn`。全部参数 `@export` 到 Inspector。
-- `PlayerConfig` 存成 `tuning/default.tres` 并挂到 Player。
-- 玩家动画状态机（idle/run/jump-fall）用**占位帧**驱动，逻辑读 `velocity` 和 `is_on_floor()`——这样美术之后只换帧不碰逻辑。
-- 一个简单测试房（平台若干）用于试手感。
-- 手感打磨：土狼时间、跳跃缓冲、可变跳跃高度都生效。
+### 0.2 Give the AI This "Architecture Briefing" at the Start of Every New Session
+Since you don't read the code closely, the biggest risk is the AI reinventing the wheel each time and putting logic in the wrong place, which leaves B and C unable to build on it during handoff. So before letting the AI work each time, paste this constraint block first (worth saving as an `AI_CONTEXT.md` you reuse):
 
-**建议提示词**：
-> 基于现有脚本，帮我把项目搭起来：建立目录结构，把 player/altar/blue_object/hud 分别做成可复用的 .tscn 预制体，所有可配置项用 @export 暴露。给 Player 加一个 AnimatedSprite2D 用纯色占位帧，做一个 idle/run/jump 的动画状态机，状态由 velocity 和 is_on_floor 驱动，并把玩家的 sprite_path 指向它。再做一个测试房场景放几个平台。确保土狼时间、跳跃缓冲、可变跳跃高度都工作。手感数值全部来自 default.tres。
+> This is a Godot 4.x GDScript project. Hard rules:
+> 1. All sacrifice-related state lives only in the `Sacrifice` singleton; any system communicates with it only through its signals — don't build a separate global state.
+> 2. All of the player's feel values come only from the `PlayerConfig` resource; the code must never contain a hardcoded movement/jump number.
+> 3. Any "object that reacts to a sacrifice" is written following the `blue_object.gd` pattern: listen to the signal, filter by its own `concept_id`. Don't add object-specific branches in the manager.
+> 4. The single-slot / double-slot / permanent-sacrifice rules live only in `sacrifice_manager.gd` — don't reimplement them elsewhere.
+> 5. Anything configurable by the player or teammates is exposed to the Inspector via `@export` and packaged as a reusable scene (.tscn) — don't hardcode it in the script.
+> Please work within these constraints, and before making a change explain which file you're going to modify and what you're adding — don't rewrite existing systems.
 
-**完成判定（玩一遍）**：
-- [ ] F5 能跑，角色左右移动、跳跃正常。
-- [ ] 跳跃手感：短按跳得矮、长按跳得高（可变高度生效）。
-- [ ] 走下平台边缘后极短时间内还能起跳（土狼时间）。
-- [ ] 落地前一点按跳，落地瞬间自动起跳（缓冲）。
-- [ ] 改 `default.tres` 里的 `move_speed` 再跑，速度确实变了（证明数据驱动）。
-- [ ] 动画在 idle/run/jump 间切换正确。
+### 0.3 How You Accept Each Step (Key)
+You don't review code, so **each step's completion criterion = physically testing every item on that step's "play-through" checklist**. If any item on the checklist is off, throw the symptom back at the AI to fix — don't go read the source yourself. Every step comes with a "regression re-test" too, because vibe coding easily breaks B while fixing A.
 
-**解锁**：所有人都有了可实例化的预制体；美术可以开始换 Player 的帧。
+### 0.4 Handoff Principle
+What you hand off isn't "a pile of code" — it's **a set of Inspector-tweakable prefabs, plus one copyable template per extension category**. B and C should be able to start working with almost no need to write code. So nothing in this plan that says "make it a scene / expose the parameters" can be skipped — that's the lifeline of handoff quality.
 
 ---
 
-## 步骤二：两个可逆牺牲全通（gravity + blue）+ 单槽约束 + 切换反馈（一次大会话）
+## Step 1: Project Bootstrap + Prefab-ification + Feel Polish (one big session)
 
-**目标**：核心玩法的"手感层"完整——按 1 献祭重力、按 2 献祭蓝、一次只能开一个，且切换有明确反馈。
+**Goal**: the project runs, the character's movement/jump feel is good in the test room, and all core objects have become reusable scenes.
 
-**交付物**：
-- `gravity` 牺牲完整：重力翻转、`up_direction` 反向、精灵 `flip_v` 自动、天花板上能站能跳。
-- `blue` 系统完整：`BlueObject` 预制体监听信号切碰撞+透明度；测试房里放几个蓝墙/蓝平台。
-- 单槽约束生效（开第二个自动关第一个）。
-- `SacrificeInput` 绑 1/2 键。
-- **切换反馈**：切换瞬间给一次极短的全屏反馈（画面轻微染色/一行字弹现）+ 预留音效钩子。文字版 HUD 实时更新。
+**Deliverables**:
+- Project directory structure set up: autoload `Sacrifice`, Input Map, main scene, `scripts/`+`scenes/`+`tuning/` directory layout.
+- Loose scripts turned into prefab scenes: `Player.tscn` (CharacterBody2D + CollisionShape2D + **AnimatedSprite2D placeholder** + Camera2D, `sprite_path` pointing at that AnimatedSprite2D), `Altar.tscn`, `BlueObject.tscn`, `HUD.tscn`. All parameters `@export`ed to the Inspector.
+- `PlayerConfig` saved as `tuning/default.tres` and attached to Player.
+- Player animation state machine (idle/run/jump-fall) driven by **placeholder frames**, with logic reading `velocity` and `is_on_floor()` — so art can later swap frames without touching logic.
+- A simple test room (a handful of platforms) for feel-testing.
+- Feel polish: coyote time, jump buffering, and variable jump height all working.
 
-**建议提示词**：
-> 让 gravity 和 blue 两个可逆牺牲完全工作。gravity：翻转重力、反向 up_direction、自动 flip_v，确保在天花板上 is_on_floor 为真且能跳离天花板。blue：BlueObject 监听信号，被献祭时禁用碰撞并半透明。在测试房放几个蓝墙和蓝平台。绑定 1 键切 gravity、2 键切 blue。加一个切换反馈系统：任何概念开关时全屏轻微染色一下并留一个播放音效的钩子。确认单槽约束——开第二个概念时第一个自动关闭。
+**Suggested prompt**:
+> Based on the existing scripts, help me set up the project: build the directory structure, turn player/altar/blue_object/hud into reusable .tscn prefabs respectively, expose every configurable item with @export. Add an AnimatedSprite2D to Player using solid-color placeholder frames, build an idle/run/jump animation state machine driven by velocity and is_on_floor, and point the player's sprite_path at it. Also make a test room scene with a few platforms. Make sure coyote time, jump buffering, and variable jump height all work. All feel values should come from default.tres.
 
-**完成判定（玩一遍）**：
-- [ ] 按 1：角色向上"坠"到天花板，精灵上下翻转，能在天花板上走。
-- [ ] 在天花板上按跳：能跳离天花板（朝地面方向）。
-- [ ] 再按 1：落回地面，精灵翻回。
-- [ ] 按 2：蓝墙变半透明且能穿过去。
-- [ ] 站在蓝平台上按 2：平台失去实体，人掉下去。
-- [ ] 已开 gravity 时按 2：HUD 里 gravity 自动消失、只剩 blue（单槽约束）。
-- [ ] 每次切换都有可见的一下反馈。
+**Completion criteria (play through)**:
+- [ ] F5 runs, the character moves left/right and jumps normally.
+- [ ] Jump feel: a short tap jumps low, holding it jumps high (variable height works).
+- [ ] Stepping off a platform edge still allows jumping for a very short window afterward (coyote time).
+- [ ] Pressing jump slightly before landing auto-triggers a jump the instant you land (buffering).
+- [ ] Changing `move_speed` in `default.tres` and re-running actually changes the speed (proves data-driven).
+- [ ] Animation switches correctly between idle/run/jump.
 
-**回归重测**：步骤一的手感 6 条重跑一遍（尤其确认加了重力翻转后普通跳跃没坏）。
-
-**解锁**：B（gimmick）可以照 `BlueObject` 复制模板做新反应式物体了。
+**Unlocks**: everyone now has instantiable prefabs; art can start swapping Player's frames.
 
 ---
 
-## 步骤三：祭坛系统 + 解锁流程 + 双槽升级 + 永久牺牲 jump + 世界内提示（一次大会话）
+## Step 2: Both Reversible Sacrifices Fully Working (gravity + blue) + Single-Slot Constraint + Toggle Feedback (one big session)
 
-**目标**：完整的银河城成长回路跑通——概念初始锁定、祭坛解锁、买双槽（永久失去跳跃）、能同时开两个。
+**Goal**: the core gameplay's "feel layer" is complete — press 1 to sacrifice gravity, press 2 to sacrifice blue, only one can be on at a time, and toggling gives clear feedback.
 
-**交付物**：
-- 概念初始全部锁定，只有走到祭坛并按 interact 确认才解锁（`SacrificeInput` 只允许切换已解锁的）。
-- `Altar.tscn` 支持三种 Action（UNLOCK / SET_SLOTS / PERMANENT_SACRIFICE），Inspector 可配。
-- 双槽神龛：叠放两个祭坛（SET_SLOTS 2 + PERMANENT_SACRIFICE jump），站在两者范围内按一次 interact（E）即可同时触发两者。
-- 永久牺牲 jump 后跳跃键失效。
-- **世界内控制提示**：走到祭坛时在其旁边显示该做什么（如"按 interact 确认"的牌子/浮字），不做独立 UI 面板。
+**Deliverables**:
+- `gravity` sacrifice complete: gravity flip, reversed `up_direction`, sprite `flip_v` automatic, able to stand and jump on the ceiling.
+- `blue` system complete: `BlueObject` prefab listens to the signal and toggles collision + transparency; a few blue walls/blue platforms placed in the test room.
+- Single-slot constraint working (opening a second one auto-closes the first).
+- `SacrificeInput` bound to keys 1/2.
+- **Toggle feedback**: a very short full-screen flash the instant a toggle happens (slight screen tint / a line of text popping up) + a reserved SFX hook. Text-based HUD updates in real time.
 
-**建议提示词**：
-> 实现解锁流程：所有概念初始锁定，SacrificeInput 只允许切换已解锁的概念。让 Altar 预制体在 Inspector 里可选 UNLOCK/SET_SLOTS/PERMANENT_SACRIFICE 三种行为。做双槽神龛——叠两个 Altar，一个把槽位设为 2、一个永久牺牲 jump，玩家进入两者范围后按一次 interact 同时触发两者。永久牺牲 jump 后跳跃键无效。再加世界内提示：玩家靠近祭坛时在旁边显示一行该操作的文字，需要按 interact 键确认才真正触发。
+**Suggested prompt**:
+> Make gravity and blue, the two reversible sacrifices, fully work. gravity: flip gravity, reverse up_direction, auto flip_v, make sure is_on_floor is true on the ceiling and the player can jump off it. blue: BlueObject listens to the signal, disables collision and turns translucent when sacrificed. Place a few blue walls and blue platforms in the test room. Bind key 1 to toggle gravity, key 2 to toggle blue. Add a toggle-feedback system: a brief full-screen tint whenever any concept toggles on/off, plus a hook for playing a sound effect. Confirm the single-slot constraint — opening a second concept automatically closes the first.
 
-**完成判定（玩一遍）**：
-- [ ] 游戏一开始按 1/2 无反应（未解锁）。
-- [ ] 走到重力祭坛按 interact 解锁后按 1 才生效；蓝祭坛同理按 interact 解锁后按 2 才生效。
-- [ ] 走到双槽神龛按 interact 后：HUD 槽位变 2，同时跳跃键此后失效。
-- [ ] 拿双槽后先按 1 再按 2：两个都亮着（HUD 显示 2 个激活），不再互相顶掉。
-- [ ] 靠近祭坛能看到操作提示文字，按 interact 后才真正触发对应效果。
+**Completion criteria (play through)**:
+- [ ] Press 1: the character "falls" upward to the ceiling, the sprite flips vertically, and it can walk on the ceiling.
+- [ ] Press jump while on the ceiling: able to jump off the ceiling (toward the floor).
+- [ ] Press 1 again: falls back to the floor, sprite flips back.
+- [ ] Press 2: the blue wall turns translucent and can be walked through.
+- [ ] Standing on a blue platform and pressing 2: the platform loses its solidity and the character falls through.
+- [ ] Pressing 2 while gravity is already on: gravity auto-disappears from the HUD, leaving only blue (single-slot constraint).
+- [ ] Every toggle has a visible flash of feedback.
 
-**回归重测**：步骤二的单槽约束——在**只有 1 槽**（还没买双槽）时确认开第二个仍会顶掉第一个。
+**Regression re-test**: re-run all 6 feel checks from Step 1 (especially confirming that normal jumping still works after adding gravity flip).
 
-**解锁**：C（地图）可以开始摆祭坛设计谜题了。
-
----
-
-## 步骤四：全部 UI 牺牲（hud 界面坍塌 + fourthwall 结局）（一次大会话，较重）
-
-**目标**：把两个 UI 类牺牲全部做出来。这一步最杂，安排大块时间。
-
-**交付物**：
-- **HUD 升级**：从文字换成图标版，每个概念一枚图标，三态（灰/常态/高亮），并把 HUD 本身接进信号总线（它也是一个"会对牺牲反应的对象"）。
-- **hud（界面坍塌）**：永久牺牲 hud 后状态 UI 解体消失；牺牲瞬间在预设位置生成若干一次性的静态实体平台（落点用 Marker2D 子节点配置，不写死坐标），供玩家踩着够到原本到不了的地方。给它做成预制体，作为 B 之后能抄的样板（换一种"反应式物体"的花样：生成几何而非切换几何）。
-- **fourthwall 结局**：最终祭坛触发后，界面元素逐个掉落/淡出、场景元素消解、一行收尾文字、黑屏。**纯视觉，不碰系统窗口。**
-
-**建议提示词**：
-> 分三块做 UI 牺牲。①把 HUD 改成图标版，每概念一图标三态，并让 HUD 监听 Sacrifice 信号。②实现 hud 牺牲：永久牺牲后状态 UI 解体消失；牺牲瞬间在预设的 Marker2D 落点生成一次性实体平台，做成可复用场景（落点在编辑器里加/挪 Marker2D 调整，不写死坐标）。③fourthwall 结局：最终祭坛触发后让 HUD 逐个掉落、场景元素淡出、显示一行结束文字然后黑屏，全程纯视觉不操作操作系统窗口。
-
-**完成判定（玩一遍）**：
-- [ ] HUD 图标随解锁/激活/槽位变化正确三态显示。
-- [ ] 牺牲 hud 后状态 UI 消失；预设落点坠落生成实体平台，之前够不到的高台/缺口现在能踩上去了。
-- [ ] 走到最终祭坛按 interact 触发后：界面和场景依次解体到黑屏，且窗口本身没被乱动。
-
-**回归重测**：牺牲 hud 后靠记忆玩一小段，确认没有 UI 也能操作（gravity/blue 仍能切）。
-
-**解锁**：B 得到了"牺牲时生成平台"这个 set-piece 样板。
+**Unlocks**: B (gimmicks) can now copy the `BlueObject` template to make new reactive objects.
 
 ---
 
-## 步骤五：单场景整合关 + 房间样板（一次大会话）
+## Step 3: Altar System + Unlock Flow + Double-Slot Upgrade + Permanent Sacrifice of jump + In-World Prompts (one big session)
 
-**目标**：拼出一条从头到尾覆盖所有机制、单场景内串联的**粗略**整合关，并给 C 一个可复制的房间样板，证明所有机制能串起来通关。
+**Goal**: the full Metroidvania growth loop works end to end — concepts start locked, altars unlock them, buying the double slot (permanently losing jump), being able to have two on at once.
 
-> **架构决定（替代了本步骤最初的房间切换方案）**：不做房间间切换系统（门/边界触发+多场景加载）。所有房间放在同一个场景里，用坐标区间划分区域，相机连续跟随玩家，不做场景切换。C 之后扩展内容时，优先把这一个场景做长（加区域、加坐标区间），而不是拆成多个用切换连起来的场景。房间样板（`RoomTemplate.tscn`）用途是"复制里面的节点结构到当前场景里的新坐标"，不是"复制成一个独立可切换的新场景"。
+**Deliverables**:
+- All concepts start locked; only walking to an altar and confirming with interact unlocks them (`SacrificeInput` only allows toggling already-unlocked concepts).
+- `Altar.tscn` supports three Actions (UNLOCK / SET_SLOTS / PERMANENT_SACRIFICE), configurable in the Inspector.
+- Double-slot shrine: two altars stacked (SET_SLOTS 2 + PERMANENT_SACRIFICE jump), one press of interact (E) while standing in both ranges triggers both at once.
+- After permanently sacrificing jump, the jump key stops doing anything.
+- **In-world control prompt**: when the player walks up to an altar, show what to do next to it (e.g. a sign/floating text saying "press interact to confirm") — no standalone UI panel.
 
-**交付物**：
-- 房间样板：`RoomTemplate.tscn`（一个 `Ground` + 一个示例祭坛 + 一个示例机关），供 C 复制节点、改坐标/`concept_id` 用；不含场景切换或相机处理逻辑。
-- 一条粗略整合关（单场景），按 GDD §5.2 的 R1→R6 流程串起：教重力→测重力→教蓝并看见门槛→双槽神龛→双牺牲打通蓝竖井→fourthwall 结局。**几何用占位方块即可，不求好看**——精修交给 C。
-- 严格自查 GDD §5.4 硬约束：牺牲 jump 之后到通关全程不需要跳（逐房间实走确认）。
+**Suggested prompt**:
+> Implement the unlock flow: all concepts start locked, and SacrificeInput only allows toggling concepts that are already unlocked. Let the Altar prefab choose between three behaviors in the Inspector: UNLOCK/SET_SLOTS/PERMANENT_SACRIFICE. Build the double-slot shrine — stack two Altars, one sets slots to 2, the other permanently sacrifices jump, and one press of interact after the player enters both ranges triggers both at once. After permanently sacrificing jump, the jump key does nothing. Also add an in-world prompt: when the player gets near an altar, show a line of text nearby describing the action, which only actually triggers after pressing the interact key to confirm.
 
-**建议提示词**：
-> 用占位方块在单个场景里拼一条完整关卡，按坐标区间划分 R1→R6，按这个顺序串起来：教重力、重力竖井、教蓝且能望见蓝竖井入口、双槽神龛（牺牲 jump）、需要同时开重力和蓝的蓝刺竖井、fourthwall 结局。不做房间切换/多场景加载，全程一个场景、相机连续跟随。几何粗糙没关系。特别确认：牺牲 jump 之后的所有房间都不需要跳就能过。再做一个房间样板场景（一块地面+一个示例祭坛+一个示例机关）供后续复制节点用。
+**Completion criteria (play through)**:
+- [ ] At game start, pressing 1/2 does nothing (not yet unlocked).
+- [ ] Walking to the gravity altar and pressing interact unlocks it, after which pressing 1 works; same for the blue altar with 2.
+- [ ] After walking to the double-slot shrine and pressing interact: the HUD's slot count becomes 2, and the jump key stops working from then on.
+- [ ] After getting the double slot, pressing 1 then 2: both stay lit (HUD shows 2 active), no longer knocking each other out.
+- [ ] Getting close to an altar shows the action-prompt text, and the corresponding effect only actually triggers after pressing interact.
 
-**完成判定（玩一遍）**：
-- [ ] 能从起点一路玩到结局黑屏，中途不卡死。
-- [ ] 蓝竖井在只有单槽时确实过不去，拿双槽后能过（银河城闭环成立）。
-- [ ] **关键**：牺牲跳跃后，从神龛到结局全程不按跳也能通关。
-- [ ] 单场景内跨区域移动时相机跟随平滑、不抽风、不掉出世界。
+**Regression re-test**: Step 2's single-slot constraint — confirm that with **only 1 slot** (before buying the double slot), opening a second concept still knocks out the first.
 
-**回归重测**：完整跑一遍时留意步骤二~四的所有机制在真实关卡里都仍正常。
-
-**解锁**：C 拿到房间样板和一条参考关，可以正式做地图（在同一个场景里继续加区域）；此时"大体可玩含所有核心机制"的版本已达成。
-
----
-
-## 步骤六：打磨 + 交接打包（一次会话）
-
-**目标**：补上整体反馈打磨，整理成能"扔出去"的交接包。
-
-**交付物**：
-- 反馈打磨：切换染色、结局解体的观感过一遍。
-- **交接文档**（见下节清单），把每类扩展各一个样板指出来。
-
-**完成判定（玩一遍）**：
-- [ ] 整条流程从头玩到尾观感连贯、无明显 bug。
-- [ ] 交接清单里每一项都能在项目里指出来。
+**Unlocks**: C (map) can start placing altars and designing puzzles.
 
 ---
 
-## 交接清单（给 B 和 C）
+## Step 4: All UI Sacrifices (hud UI Collapse + fourthwall Ending) (one big, heavier session)
 
-交出去前确认下面每项都成立（这是 B/C 能顺利接手的保证）：
+**Goal**: build out both UI-type sacrifices completely. This is the messiest step — block out a large chunk of time.
 
-**给 B（gimmick）**：
-- [ ] 反应式物体样板：`BlueObject.tscn`（切换碰撞+透明度）+ `HudCollapsePlatforms.tscn`（牺牲时按 Marker2D 落点生成平台）各一个，能直接复制改 `concept_id` 或落点。
-- [ ] 一段话说明"如何加一个新概念"（照 GDD §7.6"扩展模式"）：复制模板→改 id→放个 UNLOCK 祭坛→在 SacrificeInput 加键。
-- [ ] 指明储备概念（friction/time/sound）由 B 实现，样板就是上面两个。
+**Deliverables**:
+- **HUD upgrade**: switch from text to icons, one icon per concept, three states (gray/normal/highlighted), and wire the HUD itself into the signal bus (it too is "an object that reacts to a sacrifice").
+- **hud (UI collapse)**: after permanently sacrificing hud, the status UI disintegrates and disappears; at the moment of sacrifice, spawn several one-time static solid platforms at preset locations (landing spots configured via Marker2D child nodes, no hardcoded coordinates) that the player can stand on to reach places that were previously unreachable. Package it as a prefab so B has a template to copy later (a different flavor of "reactive object": spawning geometry instead of toggling geometry).
+- **fourthwall ending**: after the final altar triggers, UI elements fall/fade out one by one, scene elements dissolve, a closing line of text appears, then black screen. **Purely visual, never touches the OS window.**
 
-**给 C（地图）**：
-- [ ] 房间样板用法 + `scenes/HOW_TO_BUILD_A_LEVEL.md` 搭建教程（复制节点到当前场景的新坐标，不是新建可切换场景）。
-- [ ] `Altar.tscn` 三种 Action 的 Inspector 配法。
-- [ ] 一条可参考的整合关。
-- [ ] 两条必须遵守的硬约束：GDD §5.4（牺牲 jump 后不需跳）和 §7.7（别设计"在蓝墙内恢复蓝"的谜题）。
+**Suggested prompt**:
+> Do the UI sacrifices in three parts. ① Switch the HUD to an icon version, one icon per concept with three states, and have the HUD listen to Sacrifice signals. ② Implement the hud sacrifice: after permanently sacrificing it the status UI disintegrates and disappears; at the moment of sacrifice, spawn one-time solid platforms at preset Marker2D landing spots, packaged as a reusable scene (landing spots adjusted by adding/moving Marker2D nodes in the editor, no hardcoded coordinates). ③ fourthwall ending: after the final altar triggers, make the HUD fall away piece by piece, scene elements fade out, show one line of closing text, then black screen — entirely visual, never touching the OS window.
 
-**通用**：
-- [ ] 所有可配置项都在 Inspector / .tres 里，B 和 C 基本不用改代码。
-- [ ] 把本文档 §0.2 那段架构铁律转述给 B 和 C，让他们的 vibe coding 也守同样的规则。
+**Completion criteria (play through)**:
+- [ ] HUD icons correctly show all three states as concepts get unlocked/activated/slots change.
+- [ ] After sacrificing hud, the status UI disappears; platforms fall into place at the preset spots, and the high ledge/gap that was previously unreachable can now be stepped up onto.
+- [ ] After walking to the final altar and pressing interact: the UI and scene disintegrate in sequence down to black screen, and the window itself was never touched.
+
+**Regression re-test**: after sacrificing hud, play for a bit relying on memory alone, confirming the game is still operable without any UI (gravity/blue can still be toggled).
+
+**Unlocks**: B now has the "spawn a platform on sacrifice" set-piece template.
 
 ---
 
-## 附：Vibe Coding 防坑（针对"不细读代码 + 要交接"）
+## Step 5: Single-Scene Integration Level + Room Template (one big session)
 
-1. **每步结束必跑回归清单**，别只测新功能。改一处坏三处是 vibe coding 常态，靠"玩"兜住。
-2. **警惕架构漂移**：你不读代码，但可以让 AI 自查——每隔几步丢一句"检查一下：有没有牺牲状态存在了 Sacrifice 单例之外？有没有硬编码的移动数字?有没有物体不通过信号而直接引用别的物体？有就修"。这是你能做的、不用读码的"体检"。
-3. **坚持预制体化**。一旦某个东西只存在于代码里、没做成场景，交接时 B/C 就得读你的代码——那正是你想避免的。发现这种就让 AI 补成 .tscn + export。
-4. **一步一存档/提交**。每过一个"完成判定"就存一个可回退点，坏了能退回上一个能玩的版本。
-5. **别让 AI 顺手扩范围**。它可能主动加战斗、加菜单——按 GDD §9.1，不在清单里的一律不做。
+**Goal**: assemble a **rough** integration level, chained together in a single scene, covering every mechanic from start to finish, and give C a copyable room template — proving all the mechanics can be strung together into a full clear.
+
+> **Architectural decision (replacing this step's original room-switching plan)**: no room-to-room switching system (door/boundary triggers + multi-scene loading). All rooms live in the same scene, divided into areas by coordinate ranges, with the camera continuously following the player — no scene switching. When C later expands the content, the priority is to make this one scene longer (adding areas, adding coordinate ranges) rather than splitting it into multiple scenes connected by transitions. The room template (`RoomTemplate.tscn`) is meant for "copying its node structure to new coordinates within the current scene," not "duplicating it into an independent, switchable new scene."
+
+**Deliverables**:
+- Room template: `RoomTemplate.tscn` (one `Ground` + one example altar + one example gimmick), for C to copy nodes from and change coordinates/`concept_id`; contains no scene-switching or camera-handling logic.
+- One rough integration level (single scene), chained per GDD §5.2's R1→R6 flow: teach gravity → test gravity → teach blue and reveal the threshold → double-slot shrine → dual-sacrifice clears the blue shaft → fourthwall ending. **Placeholder blocks for geometry are fine, doesn't need to look good** — polish is left to C.
+- Rigorously self-check the GDD §5.4 hard constraint: after sacrificing jump, no jump is required anywhere from that point to the end (walk through room by room to confirm).
+
+**Suggested prompt**:
+> Use placeholder blocks to assemble one complete level in a single scene, divided into R1→R6 by coordinate ranges, chained in this order: teach gravity, gravity shaft, teach blue while being able to see the blue shaft's entrance, double-slot shrine (sacrifice jump), a blue-spiked shaft that requires gravity and blue on at the same time, fourthwall ending. No room switching/multi-scene loading — one scene throughout, camera follows continuously. Rough geometry is fine. Specifically confirm: after sacrificing jump, every room from that point on can be cleared without ever pressing jump. Also make a room template scene (one floor + one example altar + one example gimmick) for later node-copying.
+
+**Completion criteria (play through)**:
+- [ ] Can play from the start all the way to the ending black screen without getting stuck partway.
+- [ ] The blue shaft is genuinely impassable with only a single slot, and passable after getting the double slot (the Metroidvania loop holds).
+- [ ] **Key check**: after sacrificing jump, the entire stretch from the shrine to the ending can be cleared without ever pressing jump.
+- [ ] Moving across areas within the single scene, the camera follow is smooth, doesn't jitter, and never falls out of the world.
+
+**Regression re-test**: while doing the full playthrough, watch that every mechanic from Steps 2–4 still works correctly in the real level.
+
+**Unlocks**: C has the room template and a reference level, and can start building the map for real (continuing to add areas within the same scene); at this point the "roughly playable, all core mechanics present" version has been achieved.
+
+---
+
+## Step 6: Polish + Handoff Packaging (one session)
+
+**Goal**: finish off overall feedback polish, and package everything into a handoff bundle ready to "ship out."
+
+**Deliverables**:
+- Feedback polish: give the toggle tint and the ending disintegration a pass on how they feel.
+- **Handoff docs** (see the checklist below), pointing out one template for each extension category.
+
+**Completion criteria (play through)**:
+- [ ] Playing the whole flow start to finish feels coherent, with no obvious bugs.
+- [ ] Every item in the handoff checklist can be pointed to somewhere in the project.
+
+---
+
+## Handoff Checklist (for B and C)
+
+Before handing off, confirm every item below holds (this is what guarantees B/C can pick it up smoothly):
+
+**For B (gimmicks)**:
+- [ ] Two reactive-object templates: `BlueObject.tscn` (toggles collision + transparency) and `HudCollapsePlatforms.tscn` (spawns platforms at Marker2D landing spots on sacrifice), each directly copyable by changing `concept_id` or the landing spots.
+- [ ] A short write-up on "how to add a new concept" (following GDD §7.6 "extension pattern"): copy the template → change the id → place a UNLOCK altar → add a key binding in SacrificeInput.
+- [ ] Note that the reserved concepts (friction/time/sound) are to be implemented by B, using the two templates above.
+
+**For C (map)**:
+- [ ] How to use the room template + the `scenes/HOW_TO_BUILD_A_LEVEL.md` build tutorial (copying nodes to new coordinates in the current scene, not creating a new switchable scene).
+- [ ] How to configure `Altar.tscn`'s three Actions in the Inspector.
+- [ ] One reference integration level.
+- [ ] Two hard constraints that must be followed: GDD §5.4 (no jump required after sacrificing jump) and §7.7 (don't design a puzzle that requires "restoring blue while inside a blue wall").
+
+**General**:
+- [ ] Every configurable item lives in the Inspector / .tres — B and C essentially never need to touch code.
+- [ ] Pass along this document's §0.2 architecture hard-rules block to B and C, so their vibe coding follows the same rules too.
+
+---
+
+## Appendix: Vibe Coding Pitfall-Avoidance (for "not reading code closely + needing to hand off")
+
+1. **Always run the regression checklist at the end of every step**, not just test the new feature. Fixing A while breaking B/C is the norm in vibe coding — catch it by actually playing.
+2. **Watch for architectural drift**: you don't read the code, but you can have the AI self-check — every few steps, throw in a line like "check this: is any sacrifice-related state living outside the Sacrifice singleton? Any hardcoded movement numbers? Any object referencing another object directly instead of through signals? Fix it if so." This is a "checkup" you can do without reading code.
+3. **Stick to prefab-ification**. The moment something exists only in code and hasn't been made into a scene, B/C will have to read your code at handoff time — exactly what you're trying to avoid. If you spot this, have the AI turn it into a .tscn + export.
+4. **Save/commit after every step**. Save a revertible checkpoint after every "completion criterion" passes, so a break can be rolled back to the last playable version.
+5. **Don't let the AI casually expand scope**. It might proactively add combat, add menus — per GDD §9.1, anything not on the list doesn't get built.

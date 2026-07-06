@@ -1,48 +1,48 @@
-# CLAUDE.md — 《牺牲》项目 AI 协作规则
+# CLAUDE.md — 《Sacrifice》 Project AI Collaboration Rules
 
-## 你是谁 / 这是什么
+## Who You Are / What This Is
 
-你是本 Godot 4.x 项目的**实现（编码）助手**。项目是一个"减法银河城"：玩家通过牺牲抽象概念来通过原本过不去的地方。
+You are the **implementation (coding) assistant** for this Godot 4.x project. The project is a "subtractive Metroidvania": the player sacrifices abstract concepts to get through places that were otherwise impassable.
 
-- 完整设计以 `GDD.md` 为**唯一权威**。
-- 开发顺序以 `DEV_PLAN_CORE.md` 为准。
-- **动手前先读这两份文件。**
-
----
-
-## ⛔ 最高优先级规则：禁止一切 Git 操作
-
-- 你**绝对不能**执行任何 git 命令：`git init` / `add` / `commit` / `push` / `pull` / `branch` / `checkout` / `merge` / `stash` / `rm` / `reset` 等，**一个都不行**。
-- 版本控制**完全由人类开发者手动完成**。你只负责创建和修改文件，绝不碰仓库状态。
-- 即使某项工作"通常"会伴随一次提交，你也**只做文件改动、就地停下**，把提交留给开发者。
-- 你可以用一句话提示"这里适合提交一次"，但**不要自己动手**，也不要建议具体的 git 命令去让别人以为该由你运行。
+- The full design lives in `GDD.md`, the **sole authority**.
+- The build order lives in `DEV_PLAN_CORE.md`.
+- **Read both files before doing anything.**
 
 ---
 
-## 技术栈与约定
+## ⛔ Top-Priority Rule: No Git Operations, Ever
 
-- Godot 4.2+，GDScript。缩进用 **Tab**。
-- 目录结构：`scripts/`（逻辑）、`scenes/`（场景）、`tuning/`（配置资源 .tres）、`assets/`（美术）。
-- 面向玩家或队友可调的东西一律用 `@export` 暴露到 Inspector，并做成**可复用的 `.tscn` 预制体**，不要写死在代码里。
-- 每个脚本顶部注释写明职责；关键函数保留清晰的英文行内注释。
-
----
-
-## 架构铁律（不可违反）
-
-1. 所有牺牲相关状态只存在 `Sacrifice` 单例里；任何系统只通过它的**信号**通信，不建第二个全局状态。
-2. 玩家所有手感数值只来自 `PlayerConfig` 资源；代码里**不许出现硬编码的移动/跳跃数字**。
-3. 任何"会对牺牲做出反应的物体"都用统一模式：监听 `Sacrifice` 信号、过滤自己的 `concept_id`。不要在单例里加针对具体物体的分支。
-4. 单槽/双槽/永久牺牲的规则只在 `Sacrifice` 单例内实现，别处不重写。
-5. 碰撞层：世界实体 = Layer 1，玩家 = Layer 2（见 GDD §7.4）。
-6. 单例的 autoload 名字必须正好是 `Sacrifice`（大写 S）。
+- You **must never** run any git command: `git init` / `add` / `commit` / `push` / `pull` / `branch` / `checkout` / `merge` / `stash` / `rm` / `reset`, etc. — **none of them, ever**.
+- Version control is **entirely the human developer's job, done manually**. You only create and modify files — never touch repository state.
+- Even when a piece of work would "normally" come with a commit, you **only make the file changes and stop there**, leaving the commit to the developer.
+- You may hint in one sentence that "this would be a good point to commit," but **do not do it yourself**, and do not suggest specific git commands in a way that implies someone else should run them on your behalf.
 
 ---
 
-## 工作方式
+## Tech Stack & Conventions
 
-- 一次只做 `DEV_PLAN_CORE.md` 里**当前这一步**的范围，**不要提前实现后面步骤的内容**。
-- 每次改动前，先用几句话列出"我要创建/修改哪些文件、加什么"，再动手；不要重写已经能正常工作的系统。
-- 不要主动扩范围：不加战斗、菜单、联网、存档等 GDD §9.1 明确排除的东西。
-- 保证每一步结束时项目能 F5 运行、可被人类实测。
-- 不要修改 Project Settings（autoload / Input Map / 主场景）——这些由人类在编辑器里手动设置。如果你需要某个输入动作或 autoload 存在，只管在代码里正常引用，由人类去编辑器里配好。
+- Godot 4.2+, GDScript. Indent with **Tabs**.
+- Directory layout: `scripts/` (logic), `scenes/` (scenes), `tuning/` (config resources, `.tres`), `assets/` (art).
+- Anything the player or a teammate should be able to tune must be exposed to the Inspector via `@export` and packaged as a **reusable `.tscn` prefab** — never hardcode it in the script.
+- Every script has a top comment stating its responsibility; keep clear inline comments on key functions.
+
+---
+
+## Architectural Hard Rules (Never Break These)
+
+1. All sacrifice-related state lives only in the `Sacrifice` singleton; any other system communicates with it only through its **signals** — never build a second global state holder.
+2. All of the player's feel values come only from the `PlayerConfig` resource; the code **must never contain a hardcoded movement/jump number**.
+3. Any "object that reacts to a sacrifice" follows one unified pattern: listen to `Sacrifice` signals and filter by its own `concept_id`. Never add object-specific branches inside the singleton.
+4. The single-slot / double-slot / permanent-sacrifice rules are implemented only inside the `Sacrifice` singleton — never re-implemented elsewhere.
+5. Collision layers: world entities = Layer 1, player = Layer 2 (see GDD §7.4).
+6. The singleton's autoload name must be exactly `Sacrifice` (capital S).
+
+---
+
+## How to Work
+
+- Work on only the **current step's** scope from `DEV_PLAN_CORE.md` at a time — **do not implement content from later steps ahead of schedule**.
+- Before each change, list in a few sentences "which files I'm going to create/modify, and what I'm adding," then start; don't rewrite systems that already work.
+- Don't expand scope on your own initiative: don't add combat, menus, networking, save systems, or anything else explicitly excluded by GDD §9.1.
+- Make sure the project can run with F5 and be play-tested by a human at the end of every step.
+- Don't modify Project Settings (autoload / Input Map / main scene) — these are set up manually by the human in the editor. If you need an input action or an autoload to exist, just reference it normally in code and let the human configure it in the editor.
