@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm /Users/litk/Documents/Coding-Workplace/sacrifice/scenes/ObservationGate.tscn && echo \"deleted\")"
+    ],
+    "additionalDirectories": [
+      "/Users/litk/Documents/Coding-Workplace/sacrifice/scenes"
+    ]
+  }
+}
