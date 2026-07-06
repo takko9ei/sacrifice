@@ -4,101 +4,44 @@
 [ext_resource type="PackedScene" path="res://scenes/BlueObject.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/Altar.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="4"]
-[ext_resource type="Script" uid="uid://bca3u5fmpjuu4" path="res://scripts/sacrifice_input.gd" id="5"]
-[ext_resource type="Script" uid="uid://7t584lu6e6nx" path="res://scripts/restart_controller.gd" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/EndingSequence.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/HudCollapsePlatforms.tscn" id="8"]
-
-[sub_resource type="RectangleShape2D" id="Shape_Safety"]
-size = Vector2(2000, 40)
-
-[sub_resource type="RectangleShape2D" id="Shape_HudLedge"]
-size = Vector2(120, 20)
-
-[sub_resource type="RectangleShape2D" id="Shape_R1Ground"]
-size = Vector2(550, 40)
-
-[sub_resource type="RectangleShape2D" id="Shape_R1Ceiling"]
-size = Vector2(300, 40)
-
-[sub_resource type="RectangleShape2D" id="Shape_R2Ledge"]
-size = Vector2(200, 20)
-
-[sub_resource type="RectangleShape2D" id="Shape_R3Ground"]
-size = Vector2(450, 40)
-
-[sub_resource type="RectangleShape2D" id="Shape_R4Ground"]
-size = Vector2(300, 40)
-
-[sub_resource type="RectangleShape2D" id="Shape_R5Wall"]
-size = Vector2(20, 680)
-
-[sub_resource type="RectangleShape2D" id="Shape_R6Ground"]
-size = Vector2(300, 20)
+[ext_resource type="PackedScene" path="res://scenes/Ground.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/SacrificeInput.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/RestartController.tscn" id="11"]
 
 [node name="IntegrationLevel" type="Node2D" unique_id=505647333]
 
-[node name="SafetyFloor" type="StaticBody2D" parent="." unique_id=1175691716]
+[node name="SafetyFloor" parent="." instance=ExtResource("9")]
 position = Vector2(500, 1000)
-collision_mask = 0
+size = Vector2(2000, 40)
+color = Color(0.15, 0.15, 0.18, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SafetyFloor" unique_id=1894130632]
-shape = SubResource("Shape_Safety")
-
-[node name="Visual" type="Polygon2D" parent="SafetyFloor" unique_id=100143518]
+[node name="Visual" parent="SafetyFloor"]
 position = Vector2(-40.999985, 0)
 scale = Vector2(1.3370001, 1)
-color = Color(0.15, 0.15, 0.18, 1)
-polygon = PackedVector2Array(-1000, -20, 1000, -20, 1000, 20, -1000, 20)
 
-[node name="R1Ground" type="StaticBody2D" parent="." unique_id=1374496496]
+[node name="R1Ground" parent="." instance=ExtResource("9")]
 position = Vector2(-125, 300)
-collision_mask = 0
+size = Vector2(550, 40)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="R1Ground" unique_id=1557973749]
-shape = SubResource("Shape_R1Ground")
-
-[node name="Visual" type="Polygon2D" parent="R1Ground" unique_id=1264902299]
-color = Color(0.29, 0.29, 0.33, 1)
-polygon = PackedVector2Array(-275, -20, 275, -20, 275, 20, -275, 20)
-
-[node name="R1Ceiling" type="StaticBody2D" parent="." unique_id=1930458964]
+[node name="R1Ceiling" parent="." instance=ExtResource("9")]
 position = Vector2(0, -40)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="R1Ceiling" unique_id=136150975]
-shape = SubResource("Shape_R1Ceiling")
-
-[node name="Visual" type="Polygon2D" parent="R1Ceiling" unique_id=1429854073]
-color = Color(0.29, 0.29, 0.33, 1)
-polygon = PackedVector2Array(-150, -20, 150, -20, 150, 20, -150, 20)
+size = Vector2(300, 40)
 
 [node name="AltarGravity" parent="." unique_id=219246797 instance=ExtResource("3")]
 position = Vector2(-300, 248)
 concept_id = "gravity"
 message = "Press E to Sacrifice Gravity (Enables Anti-Gravity by pressing 1, reversible)"
 
-[node name="R2Ledge" type="StaticBody2D" parent="." unique_id=1874742183]
+[node name="R2Ledge" parent="." instance=ExtResource("9")]
 position = Vector2(300, -150)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="R2Ledge" unique_id=1260821902]
-shape = SubResource("Shape_R2Ledge")
-
-[node name="Visual" type="Polygon2D" parent="R2Ledge" unique_id=747382679]
+size = Vector2(200, 20)
 color = Color(0.35, 0.42, 0.5, 1)
-polygon = PackedVector2Array(-100, -10, 100, -10, 100, 10, -100, 10)
 
-[node name="R3Ground" type="StaticBody2D" parent="." unique_id=1606295366]
+[node name="R3Ground" parent="." instance=ExtResource("9")]
 position = Vector2(675, 300)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="R3Ground" unique_id=1918142671]
-shape = SubResource("Shape_R3Ground")
-
-[node name="Visual" type="Polygon2D" parent="R3Ground" unique_id=1964818764]
-color = Color(0.29, 0.29, 0.33, 1)
-polygon = PackedVector2Array(-225, -20, 225, -20, 225, 20, -225, 20)
+size = Vector2(450, 40)
 
 [node name="AltarBlue" parent="." unique_id=1268936731 instance=ExtResource("3")]
 position = Vector2(550, 248)
@@ -109,17 +52,10 @@ message = "Press E to Sacrifice Blue (Press 2 to Clear Blue, reversible)"
 position = Vector2(750, 244)
 scale = Vector2(1, 4)
 
-[node name="HudLedge" type="StaticBody2D" parent="."]
+[node name="HudLedge" parent="." instance=ExtResource("9")]
 position = Vector2(820, 100)
-collision_layer = 1
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HudLedge"]
-shape = SubResource("Shape_HudLedge")
-
-[node name="Visual" type="Polygon2D" parent="HudLedge"]
+size = Vector2(120, 20)
 color = Color(0.35, 0.42, 0.5, 1)
-polygon = PackedVector2Array(-60, -10, 60, -10, 60, 10, -60, 10)
 
 [node name="AltarHud" parent="." instance=ExtResource("3")]
 position = Vector2(800, 248)
@@ -136,16 +72,9 @@ position = Vector2(0, -70)
 [node name="Drop2" type="Marker2D" parent="HudCollapsePlatforms"]
 position = Vector2(0, -135)
 
-[node name="R4Ground" type="StaticBody2D" parent="." unique_id=155764783]
+[node name="R4Ground" parent="." instance=ExtResource("9")]
 position = Vector2(1050, 300)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="R4Ground" unique_id=718679968]
-shape = SubResource("Shape_R4Ground")
-
-[node name="Visual" type="Polygon2D" parent="R4Ground" unique_id=711999981]
-color = Color(0.29, 0.29, 0.33, 1)
-polygon = PackedVector2Array(-150, -20, 150, -20, 150, 20, -150, 20)
+size = Vector2(300, 40)
 
 [node name="AltarDoubleSlots" parent="." unique_id=1824774274 instance=ExtResource("3")]
 position = Vector2(1050, 248)
@@ -157,29 +86,15 @@ position = Vector2(1050, 248)
 action = 2
 concept_id = "jump"
 
-[node name="LeftWallR5" type="StaticBody2D" parent="." unique_id=1649025799]
+[node name="LeftWallR5" parent="." instance=ExtResource("9")]
 position = Vector2(1190, -60)
 scale = Vector2(1, 1.1600008)
-collision_mask = 0
+size = Vector2(20, 680)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWallR5" unique_id=618322116]
-shape = SubResource("Shape_R5Wall")
-
-[node name="Visual" type="Polygon2D" parent="LeftWallR5" unique_id=384864594]
-color = Color(0.29, 0.29, 0.33, 1)
-polygon = PackedVector2Array(-10, -340, 10, -340, 10, 340, -10, 340)
-
-[node name="RightWallR5" type="StaticBody2D" parent="." unique_id=563098718]
+[node name="RightWallR5" parent="." instance=ExtResource("9")]
 position = Vector2(1360, -60)
 scale = Vector2(1, 1.1599993)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RightWallR5" unique_id=1446625367]
-shape = SubResource("Shape_R5Wall")
-
-[node name="Visual" type="Polygon2D" parent="RightWallR5" unique_id=1259739567]
-color = Color(0.29, 0.29, 0.33, 1)
-polygon = PackedVector2Array(-10, -340, 10, -340, 10, 340, -10, 340)
+size = Vector2(20, 680)
 
 [node name="BlueBarrier1" parent="." unique_id=925762975 instance=ExtResource("2")]
 position = Vector2(1275, 150)
@@ -193,16 +108,10 @@ scale = Vector2(5, 1)
 position = Vector2(1275, -250)
 scale = Vector2(5, 1)
 
-[node name="R6Ground" type="StaticBody2D" parent="." unique_id=1431913159]
+[node name="R6Ground" parent="." instance=ExtResource("9")]
 position = Vector2(1275, -450)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="R6Ground" unique_id=778197638]
-shape = SubResource("Shape_R6Ground")
-
-[node name="Visual" type="Polygon2D" parent="R6Ground" unique_id=490649630]
+size = Vector2(300, 20)
 color = Color(0.35, 0.42, 0.5, 1)
-polygon = PackedVector2Array(-150, -10, 150, -10, 150, 10, -150, 10)
 
 [node name="AltarFourthwall" parent="." unique_id=2025280870 instance=ExtResource("3")]
 position = Vector2(1275, -406)
@@ -210,12 +119,9 @@ action = 2
 concept_id = "fourthwall"
 message = "Press E to Sacrifice the Fourth Wall (Ends the game, unreversible)"
 
-[node name="SacrificeInput" type="Node" parent="." unique_id=66751112]
-script = ExtResource("5")
+[node name="SacrificeInput" parent="." instance=ExtResource("10")]
 
-[node name="RestartController" type="Node" parent="." unique_id=1322565594]
-process_mode = 3
-script = ExtResource("6")
+[node name="RestartController" parent="." instance=ExtResource("11")]
 
 [node name="HUD" parent="." unique_id=181721205 instance=ExtResource("4")]
 
@@ -225,15 +131,11 @@ hud_fade_target_path = NodePath("../HUD/Layout")
 [node name="Player" parent="." unique_id=1570455461 instance=ExtResource("1")]
 position = Vector2(-380, 260)
 
-[node name="SafetyFloor2" type="StaticBody2D" parent="." unique_id=1356085790]
+[node name="SafetyFloor2" parent="." instance=ExtResource("9")]
 position = Vector2(500, -882)
-collision_mask = 0
+size = Vector2(2000, 40)
+color = Color(0.15, 0.15, 0.18, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SafetyFloor2" unique_id=26758154]
-shape = SubResource("Shape_Safety")
-
-[node name="Visual" type="Polygon2D" parent="SafetyFloor2" unique_id=850135452]
+[node name="Visual" parent="SafetyFloor2"]
 position = Vector2(-40.999985, 0)
 scale = Vector2(1.3370001, 1)
-color = Color(0.15, 0.15, 0.18, 1)
-polygon = PackedVector2Array(-1000, -20, 1000, -20, 1000, 20, -1000, 20)

@@ -1,6 +1,6 @@
 extends Area2D
 class_name Altar
-# Generic altar trigger (GDD §2.6 concept table, §5.2, §8.3, §9.1). Entering
+# Generic altar trigger (GDD §2.6 concept table, §5.2, §7.3, §8.1). Entering
 # only shows the hint; the player must press "interact" while inside to fire
 # one Sacrifice command. All behavior is Inspector-driven — never hardcode a
 # specific concept here. Stack multiple Altar instances at the same spot to

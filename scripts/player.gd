@@ -5,7 +5,7 @@ class_name Player
 # `gravity` sacrifice (GDD §2.6, §3.5). Every feel number comes from
 # `config` (PlayerConfig) — no hardcoded movement/jump numbers here
 # (CLAUDE.md rule 2). `blue` and other world-facing concepts are not the
-# player's concern (see blue_object.gd / GDD §8.6).
+# player's concern (see blue_object.gd / GDD §7.6).
 
 @export var config: PlayerConfig
 @export var sprite_path: NodePath = ^"AnimatedSprite2D"

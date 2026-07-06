@@ -2,7 +2,7 @@ extends Node
 # Sacrifice singleton (autoload name must be exactly "Sacrifice", see CLAUDE.md).
 # The single source of truth for all sacrifice-related state. Every other
 # system must talk to it only through these signals/queries/commands —
-# never build a second global state holder (GDD §8.2, CLAUDE.md rule 1).
+# never build a second global state holder (GDD §7.2, CLAUDE.md rule 1).
 
 signal concept_activated(id: String)
 signal concept_deactivated(id: String)

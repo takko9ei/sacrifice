@@ -5,9 +5,9 @@ extends CanvasLayer
 # Fires once when "fourthwall" is permanently sacrificed. process_mode is
 # Always (see EndingSequence.tscn) and _play_sequence() pauses the tree
 # itself so the rest of the game freezes while this keeps animating.
-# Decoupled from HUD/pause/observation gate — only listens for
-# Sacrifice.concept_permanently_sacrificed, and hud_fade_target_path is a
-# plain Inspector-wired reference, not a hardcoded scene path.
+# Decoupled from HUD — only listens for Sacrifice.concept_permanently_sacrificed,
+# and hud_fade_target_path is a plain Inspector-wired reference, not a
+# hardcoded scene path.
 
 @export var hud_fade_target_path: NodePath = ^""
 @export var ending_text: String = "Thank you for playing."

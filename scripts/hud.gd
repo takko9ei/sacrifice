@@ -6,7 +6,7 @@ extends CanvasLayer
 # art later without touching this script. Driven only by Sacrifice's public
 # signals and getters, same "reacts to Sacrifice" pattern as blue_object.gd.
 # Also owns the lightweight whole-screen flash feedback on concept toggle
-# (GDD §4.3), decoupled from the pause sacrifice (see pause_controller.gd).
+# (GDD §4.3).
 
 @export var layout_path: NodePath = ^"Layout"
 @export var slots_container_path: NodePath = ^"Layout/SlotsRow"
@@ -118,8 +118,3 @@ func _play_flash() -> void:
 	_flash_overlay.modulate.a = 1.0
 	var tween: Tween = create_tween()
 	tween.tween_property(_flash_overlay, "modulate:a", 0.0, flash_duration)
-	_play_toggle_sfx_hook()
-
-
-func _play_toggle_sfx_hook() -> void:
-	pass # Hook for a toggle sound effect once audio is wired up (later step).

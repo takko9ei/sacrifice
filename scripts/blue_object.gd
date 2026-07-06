@@ -1,5 +1,5 @@
 extends StaticBody2D
-# Generic reactive-object template (GDD §8.6): listens to Sacrifice for its
+# Generic reactive-object template (GDD §7.6): listens to Sacrifice for its
 # own concept_id, disables collision + fades when that concept is active,
 # restores when it is not. To add a new reactive concept, copy this file,
 # change concept_id (and the color/shape in the matching .tscn) — do not

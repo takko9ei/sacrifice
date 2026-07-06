@@ -1,5 +1,5 @@
 extends Node
-# Maps input actions to concept toggles (GDD §3.1, §8.3). To add a new
+# Maps input actions to concept toggles (GDD §3.1, §7.3). To add a new
 # concept's key binding, add an entry here (and the input action in Project
 # Settings) — no changes to Sacrifice or Player needed.
 
