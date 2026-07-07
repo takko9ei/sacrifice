@@ -6,6 +6,8 @@ extends Node
 @export var bindings: Dictionary = {
 	"sacrifice_gravity": "gravity",
 	"sacrifice_blue": "blue",
+	"sacrifice_red": "red",
+	"sacrifice_green": "green",
 }
 
 

@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" path="res://scenes/RestartController.tscn" id="8_2xfll"]
 [ext_resource type="PackedScene" path="res://scenes/EndingSequence.tscn" id="9_e6kmq"]
 [ext_resource type="PackedScene" path="res://scenes/HudCollapsePlatforms.tscn" id="10_mgij8"]
+[ext_resource type="PackedScene" path="res://scenes/RedObject.tscn" id="12_redobject"]
+[ext_resource type="PackedScene" path="res://scenes/GreenObject.tscn" id="14_greenobject"]
 
 [node name="RoomTemplate" type="Node2D" unique_id=1932247373]
 script = ExtResource("1")
@@ -89,6 +91,24 @@ position = Vector2(2474, 314)
 [node name="BlueObject2" parent="." unique_id=1912591767 instance=ExtResource("4")]
 position = Vector2(2594, 295)
 scale = Vector2(1, 7.86)
+
+[node name="RedAltar" parent="." instance=ExtResource("3")]
+position = Vector2(2850, 458)
+concept_id = "red"
+message = "Press E to Sacrifice Red (Press 3 to Clear Red, reversible)"
+
+[node name="RedObject" parent="." instance=ExtResource("12_redobject")]
+position = Vector2(3000, 430)
+scale = Vector2(1, 6)
+
+[node name="GreenAltar" parent="." instance=ExtResource("3")]
+position = Vector2(3180, 458)
+concept_id = "green"
+message = "Press E to Sacrifice Green (Press 4 to Clear Green, reversible)"
+
+[node name="GreenObject" parent="." instance=ExtResource("14_greenobject")]
+position = Vector2(3330, 430)
+scale = Vector2(1, 6)
 
 [node name="Ground10" parent="." unique_id=174887549 instance=ExtResource("2")]
 position = Vector2(1678, 316)

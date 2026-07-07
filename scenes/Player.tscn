@@ -12,7 +12,7 @@ top_level = true
 collision_layer = 2
 script = ExtResource("1")
 config = ExtResource("2")
-sprite_path = null
+sprite_path = NodePath("AnimatedSprite2D")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1685294897]
 shape = SubResource("RectangleShape2D_1")

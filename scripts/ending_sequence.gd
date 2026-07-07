@@ -17,6 +17,9 @@ extends CanvasLayer
 @export var text_fade_duration: float = 1.0
 @export var text_hold_duration: float = 2.0
 @export var final_fade_duration: float = 1.0
+@export var return_to_title_delay: float = 1.0
+@export_file("*.tscn") var title_scene_path: String = "res://scenes/TitleScreen.tscn"
+@export var skip_sequence: bool = false
 
 @export var overlay_path: NodePath = ^"Overlay"
 @export var label_path: NodePath = ^"Label"
@@ -40,6 +43,10 @@ func _on_permanently_sacrificed(id: String) -> void:
 
 
 func _play_sequence() -> void:
+	if skip_sequence:
+		_return_to_title()
+		return
+
 	get_tree().paused = true
 	var hud_target: CanvasItem = get_node_or_null(hud_fade_target_path) as CanvasItem
 	var tween: Tween = create_tween()
@@ -50,3 +57,11 @@ func _play_sequence() -> void:
 	tween.tween_interval(text_hold_duration)
 	tween.tween_property(_label, "modulate:a", 0.0, final_fade_duration)
 	tween.parallel().tween_property(_overlay, "modulate:a", 1.0, final_fade_duration)
+	tween.tween_interval(return_to_title_delay)
+	tween.tween_callback(_return_to_title)
+
+
+func _return_to_title() -> void:
+	Sacrifice.reset()
+	get_tree().paused = false
+	get_tree().change_scene_to_file(title_scene_path)

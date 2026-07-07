@@ -9,23 +9,37 @@
 [ext_resource type="PackedScene" path="res://scenes/Ground.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/SacrificeInput.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/RestartController.tscn" id="11"]
+[ext_resource type="Script" uid="uid://by2twbo8qdu2r" path="res://scripts/integration_intro.gd" id="12"]
+[ext_resource type="SpriteFrames" path="res://assets/player/player_frames.tres" id="13"]
+[ext_resource type="SpriteFrames" uid="uid://bkx8s35b2dyul" path="res://assets/player/title_stand_frames.tres" id="14"]
 
 [node name="IntegrationLevel" type="Node2D" unique_id=505647333]
+script = ExtResource("12")
+gameplay_frames = ExtResource("13")
+locked_frames = ExtResource("14")
 
-[node name="SafetyFloor" parent="." instance=ExtResource("9")]
-position = Vector2(500, 1000)
-size = Vector2(2000, 40)
+[node name="SafetyFloor" parent="." unique_id=780793646 instance=ExtResource("9")]
+position = Vector2(500, 1480)
+size = Vector2(3000, 40)
 color = Color(0.15, 0.15, 0.18, 1)
 
-[node name="Visual" parent="SafetyFloor"]
-position = Vector2(-40.999985, 0)
-scale = Vector2(1.3370001, 1)
+[node name="SafetyFloorLeft" parent="." unique_id=616885404 instance=ExtResource("9")]
+position = Vector2(-1000, 0)
+rotation = 1.5707964
+size = Vector2(3000, 40)
+color = Color(0.15, 0.15, 0.18, 1)
 
-[node name="R1Ground" parent="." instance=ExtResource("9")]
+[node name="SafetyFloorRight" parent="." unique_id=366140972 instance=ExtResource("9")]
+position = Vector2(2000, 0)
+rotation = 1.5707964
+size = Vector2(3000, 40)
+color = Color(0.15, 0.15, 0.18, 1)
+
+[node name="R1Ground" parent="." unique_id=665572293 instance=ExtResource("9")]
 position = Vector2(-125, 300)
 size = Vector2(550, 40)
 
-[node name="R1Ceiling" parent="." instance=ExtResource("9")]
+[node name="R1Ceiling" parent="." unique_id=1504378034 instance=ExtResource("9")]
 position = Vector2(0, -40)
 size = Vector2(300, 40)
 
@@ -34,12 +48,12 @@ position = Vector2(-300, 248)
 concept_id = "gravity"
 message = "Press E to Sacrifice Gravity (Enables Anti-Gravity by pressing 1, reversible)"
 
-[node name="R2Ledge" parent="." instance=ExtResource("9")]
+[node name="R2Ledge" parent="." unique_id=1067215500 instance=ExtResource("9")]
 position = Vector2(300, -150)
 size = Vector2(200, 20)
 color = Color(0.35, 0.42, 0.5, 1)
 
-[node name="R3Ground" parent="." instance=ExtResource("9")]
+[node name="R3Ground" parent="." unique_id=1360982340 instance=ExtResource("9")]
 position = Vector2(675, 300)
 size = Vector2(450, 40)
 
@@ -52,27 +66,27 @@ message = "Press E to Sacrifice Blue (Press 2 to Clear Blue, reversible)"
 position = Vector2(750, 244)
 scale = Vector2(1, 4)
 
-[node name="HudLedge" parent="." instance=ExtResource("9")]
+[node name="HudLedge" parent="." unique_id=1899164754 instance=ExtResource("9")]
 position = Vector2(820, 100)
 size = Vector2(120, 20)
 color = Color(0.35, 0.42, 0.5, 1)
 
-[node name="AltarHud" parent="." instance=ExtResource("3")]
+[node name="AltarHud" parent="." unique_id=261598637 instance=ExtResource("3")]
 position = Vector2(800, 248)
 action = 2
 concept_id = "hud"
 message = "Press E to Sacrifice the HUD (Removes status UI, drops bonus platforms, unreversible)"
 
-[node name="HudCollapsePlatforms" parent="." instance=ExtResource("8")]
+[node name="HudCollapsePlatforms" parent="." unique_id=936883279 instance=ExtResource("8")]
 position = Vector2(820, 280)
 
-[node name="Drop1" type="Marker2D" parent="HudCollapsePlatforms"]
+[node name="Drop1" type="Marker2D" parent="HudCollapsePlatforms" unique_id=1106128079]
 position = Vector2(0, -70)
 
-[node name="Drop2" type="Marker2D" parent="HudCollapsePlatforms"]
+[node name="Drop2" type="Marker2D" parent="HudCollapsePlatforms" unique_id=2079765738]
 position = Vector2(0, -135)
 
-[node name="R4Ground" parent="." instance=ExtResource("9")]
+[node name="R4Ground" parent="." unique_id=530009135 instance=ExtResource("9")]
 position = Vector2(1050, 300)
 size = Vector2(300, 40)
 
@@ -86,12 +100,12 @@ position = Vector2(1050, 248)
 action = 2
 concept_id = "jump"
 
-[node name="LeftWallR5" parent="." instance=ExtResource("9")]
+[node name="LeftWallR5" parent="." unique_id=1212137843 instance=ExtResource("9")]
 position = Vector2(1190, -60)
 scale = Vector2(1, 1.1600008)
 size = Vector2(20, 680)
 
-[node name="RightWallR5" parent="." instance=ExtResource("9")]
+[node name="RightWallR5" parent="." unique_id=1211338245 instance=ExtResource("9")]
 position = Vector2(1360, -60)
 scale = Vector2(1, 1.1599993)
 size = Vector2(20, 680)
@@ -108,7 +122,7 @@ scale = Vector2(5, 1)
 position = Vector2(1275, -250)
 scale = Vector2(5, 1)
 
-[node name="R6Ground" parent="." instance=ExtResource("9")]
+[node name="R6Ground" parent="." unique_id=1063814338 instance=ExtResource("9")]
 position = Vector2(1275, -450)
 size = Vector2(300, 20)
 color = Color(0.35, 0.42, 0.5, 1)
@@ -119,23 +133,34 @@ action = 2
 concept_id = "fourthwall"
 message = "Press E to Sacrifice the Fourth Wall (Ends the game, unreversible)"
 
-[node name="SacrificeInput" parent="." instance=ExtResource("10")]
+[node name="SacrificeInput" parent="." unique_id=1959940742 instance=ExtResource("10")]
 
-[node name="RestartController" parent="." instance=ExtResource("11")]
+[node name="RestartController" parent="." unique_id=525395782 instance=ExtResource("11")]
 
 [node name="HUD" parent="." unique_id=181721205 instance=ExtResource("4")]
 
 [node name="EndingSequence" parent="." unique_id=2056844450 instance=ExtResource("7")]
 hud_fade_target_path = NodePath("../HUD/Layout")
+title_scene_path = "res://scenes/RoomTemplate.tscn"
+skip_sequence = true
 
 [node name="Player" parent="." unique_id=1570455461 instance=ExtResource("1")]
 position = Vector2(-380, 260)
 
-[node name="SafetyFloor2" parent="." instance=ExtResource("9")]
-position = Vector2(500, -882)
-size = Vector2(2000, 40)
-color = Color(0.15, 0.15, 0.18, 1)
+[node name="IntroPrompt" type="Label" parent="." unique_id=921945553]
+visible = false
+offset_left = -570.0
+offset_top = 160.0
+offset_right = -190.0
+offset_bottom = 220.0
+theme_override_colors/font_color = Color(0.9, 0.9, 0.82, 1)
+theme_override_font_sizes/font_size = 22
+text = "Press E to sacrifice the player graphic!"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="Visual" parent="SafetyFloor2"]
-position = Vector2(-40.999985, 0)
-scale = Vector2(1.3370001, 1)
+[node name="SafetyFloor2" parent="." unique_id=87963931 instance=ExtResource("9")]
+position = Vector2(500, -1480)
+size = Vector2(3000, 40)
+color = Color(0.15, 0.15, 0.18, 1)

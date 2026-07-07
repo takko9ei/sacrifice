@@ -1,0 +1,26 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://bkx8s35b2dyul"]
+
+[ext_resource type="Texture2D" uid="uid://synrt2jm11n6" path="res://assets/player-stand/player-stand-1.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://ci0glu8n8dyfk" path="res://assets/player-stand/player-stand-2.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://k2k3cj0vtcmi" path="res://assets/player-stand/player-stand-3.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://drd1op6b1ue8y" path="res://assets/player-stand/player-stand-4.png" id="4"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4")
+}],
+"loop": true,
+"name": &"stand",
+"speed": 6.0
+}]
