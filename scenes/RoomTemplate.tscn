@@ -50,6 +50,7 @@ position = Vector2(3700, 678)
 scale = Vector2(1, 9.18)
 
 [node name="EndingSequence" parent="." unique_id=501345834 instance=ExtResource("9_e6kmq")]
+title_scene_path = "res://scenes/ColorLevel.tscn"
 
 [node name="SacrificeInput" parent="." unique_id=2115097994 instance=ExtResource("4_e017h")]
 
