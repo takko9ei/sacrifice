@@ -11,13 +11,6 @@ extends Node
 @export var unlock_flash_duration: float = 0.18
 @export var shatter_duration: float = 0.45
 @export var shard_distance: float = 42.0
-@export var stand_frame_paths: PackedStringArray = [
-	"res://assets/player-stand/player-stand-1.png",
-	"res://assets/player-stand/player-stand-2.png",
-	"res://assets/player-stand/player-stand-3.png",
-	"res://assets/player-stand/player-stand-4.png",
-]
-@export var stand_animation_speed: float = 6.0
 
 var _player: Player
 var _sprite: AnimatedSprite2D
@@ -32,10 +25,7 @@ func _ready() -> void:
 
 	_player.velocity = Vector2.ZERO
 	_player.set_physics_process(false)
-	var stand_frames: SpriteFrames = _build_stand_frames()
-	if stand_frames:
-		_sprite.sprite_frames = stand_frames
-	elif locked_frames:
+	if locked_frames:
 		_sprite.sprite_frames = locked_frames
 	_sprite.play(locked_animation)
 	_prompt.visible = true
@@ -92,24 +82,6 @@ func _show_gameplay_sprite() -> void:
 
 func _enable_player() -> void:
 	_player.set_physics_process(true)
-
-
-func _build_stand_frames() -> SpriteFrames:
-	var frames: SpriteFrames = SpriteFrames.new()
-	frames.add_animation("stand")
-	frames.set_animation_loop("stand", true)
-	frames.set_animation_speed("stand", stand_animation_speed)
-
-	for path in stand_frame_paths:
-		if not ResourceLoader.exists(path):
-			continue
-		var texture: Texture2D = load(path) as Texture2D
-		if texture:
-			frames.add_frame("stand", texture)
-
-	if frames.get_frame_count("stand") == 0:
-		return null
-	return frames
 
 
 func _spawn_shards() -> Array[Sprite2D]:

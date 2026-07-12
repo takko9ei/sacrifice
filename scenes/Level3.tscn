@@ -51,7 +51,6 @@ message = "Press E to sacrifice HUD, get 3 button slots"
 position = Vector2(766, -1444)
 action = 1
 slot_count = 3
-message = "Press E to sacrifice, get 3 button slots"
 
 [node name="AltarFourthwall" parent="Altar" unique_id=428747795 instance=ExtResource("1_opw0y")]
 position = Vector2(396, -1444)

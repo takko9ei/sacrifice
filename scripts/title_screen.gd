@@ -13,13 +13,6 @@ extends Node2D
 @export var preview_intro_prompt_path: NodePath = ^"IntegrationPreview/IntroPrompt"
 @export var character_target_position: Vector2 = Vector2(642, 354)
 @export var character_target_scale: Vector2 = Vector2(1, 1)
-@export var stand_frame_paths: PackedStringArray = [
-	"res://assets/player-stand/player-stand-1.png",
-	"res://assets/player-stand/player-stand-2.png",
-	"res://assets/player-stand/player-stand-3.png",
-	"res://assets/player-stand/player-stand-4.png",
-]
-@export var stand_animation_speed: float = 6.0
 
 var _started: bool = false
 var _title_label: Label
@@ -35,9 +28,6 @@ func _ready() -> void:
 	_character = get_node(character_path) as AnimatedSprite2D
 	_shards_root = get_node(shards_root_path)
 	_hide_preview_intro()
-	var stand_frames: SpriteFrames = _build_stand_frames()
-	if stand_frames:
-		_character.sprite_frames = stand_frames
 	_character.play("stand")
 
 
@@ -92,21 +82,3 @@ func _hide_preview_intro() -> void:
 	var preview_intro_prompt: CanvasItem = get_node_or_null(preview_intro_prompt_path) as CanvasItem
 	if preview_intro_prompt:
 		preview_intro_prompt.modulate.a = 0.0
-
-
-func _build_stand_frames() -> SpriteFrames:
-	var frames: SpriteFrames = SpriteFrames.new()
-	frames.add_animation("stand")
-	frames.set_animation_loop("stand", true)
-	frames.set_animation_speed("stand", stand_animation_speed)
-
-	for path in stand_frame_paths:
-		if not ResourceLoader.exists(path):
-			continue
-		var texture: Texture2D = load(path) as Texture2D
-		if texture:
-			frames.add_frame("stand", texture)
-
-	if frames.get_frame_count("stand") == 0:
-		return null
-	return frames

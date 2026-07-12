@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://cvxqb1ysmem20"]
 
-[ext_resource type="Script" uid="uid://cc0cno6ncvnn2" path="res://scripts/room_template.gd" id="1_3aekd"]
 [ext_resource type="PackedScene" path="res://scenes/Ground.tscn" id="2_khw7m"]
 [ext_resource type="PackedScene" path="res://scenes/BlueObject.tscn" id="3_wd6ad"]
 [ext_resource type="PackedScene" path="res://scenes/EndingSequence.tscn" id="4_cd1f0"]
@@ -14,7 +13,6 @@
 [ext_resource type="PackedScene" path="res://scenes/HudCollapsePlatforms.tscn" id="12_h35wg"]
 
 [node name="Level2" type="Node2D" unique_id=1932247373]
-script = ExtResource("1_3aekd")
 
 [node name="Ground" parent="." unique_id=445163880 instance=ExtResource("2_khw7m")]
 position = Vector2(1984, 512)
