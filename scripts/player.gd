@@ -7,6 +7,7 @@ class_name Player
 # (CLAUDE.md rule 2). `blue` and other world-facing concepts are not the
 # player's concern (see blue_object.gd / GDD §7.6).
 
+@onready var jump_sound = $JumpSound
 @export var config: PlayerConfig
 @export var sprite_path: NodePath = ^"AnimatedSprite2D"
 
@@ -101,6 +102,7 @@ func _handle_jump_input(jump_velocity: float) -> void:
 	var grav_sign: float = _gravity_sign()
 	if _jump_buffer_timer > 0.0 and _coyote_timer > 0.0:
 		velocity.y = -jump_velocity * grav_sign
+		jump_sound.play()
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
 	elif Input.is_action_just_released("jump") and velocity.y * grav_sign < 0.0:
