@@ -19,22 +19,22 @@
 [node name="AltarGravity" parent="Altar" unique_id=502571172 instance=ExtResource("1_opw0y")]
 position = Vector2(-828, 1448)
 concept_id = "gravity"
-message = "Press E to Sacrifice Gravity (Press 1 to toggle)"
+message = "Press E to sacrifice, get Button 1"
 
 [node name="AltarRed" parent="Altar" unique_id=1586393138 instance=ExtResource("1_opw0y")]
 position = Vector2(-826, 1055)
 concept_id = "red"
-message = "Press E to Sacrifice Red (Press 3 to toggle)"
+message = "Press E to sacrifice, get Button 3"
 
 [node name="AltarGreen" parent="Altar" unique_id=1016838587 instance=ExtResource("1_opw0y")]
 position = Vector2(-20, 438)
 concept_id = "green"
-message = "Press E to Sacrifice Green (Press 4 to toggle)"
+message = "Press E to sacrifice, get Button 4"
 
 [node name="AltarSlots" parent="Altar" unique_id=853029233 instance=ExtResource("1_opw0y")]
 position = Vector2(-413, 1443)
 action = 1
-message = "Press E to Sacrifice Jump (Gains 2 Sacrifice Slots, unreversible)"
+message = "Press E to sacrifice Jump, get 2 button slots"
 
 [node name="AltarJump" parent="Altar" unique_id=816317974 instance=ExtResource("1_opw0y")]
 position = Vector2(-412, 1444)
@@ -45,23 +45,24 @@ concept_id = "jump"
 position = Vector2(766, -1444)
 action = 2
 concept_id = "hud"
-message = "Press E to sacrifice the HUD (Gains 1 Sacrifice Slot, unreversible)"
+message = "Press E to sacrifice HUD, get 3 button slots"
 
 [node name="AltarSlot2" parent="Altar" unique_id=2115626658 instance=ExtResource("1_opw0y")]
 position = Vector2(766, -1444)
 action = 1
 slot_count = 3
+message = "Press E to sacrifice, get 3 button slots"
 
 [node name="AltarFourthwall" parent="Altar" unique_id=428747795 instance=ExtResource("1_opw0y")]
 position = Vector2(396, -1444)
 action = 2
 concept_id = "fourthwall"
-message = "Press E to finish Color Level"
+message = "Press E to pass the game"
 
 [node name="AltarBlue" parent="Altar" unique_id=572663769 instance=ExtResource("1_opw0y")]
 position = Vector2(-828, 1148)
 concept_id = "blue"
-message = "Press E to Sacrifice Blue (Press 2 to toggle)"
+message = "Press E to sacrifice, get Button 2"
 
 [node name="Ground" type="Node2D" parent="." unique_id=328490673]
 
@@ -415,7 +416,6 @@ scale = Vector2(2, 2)
 
 [node name="EndingSequence" parent="." unique_id=128790938 instance=ExtResource("11_ddxw6")]
 hud_fade_target_path = NodePath("../HUD/Layout")
-ending_text = "Color level complete."
 
 [node name="RightPracticeGround2" parent="." unique_id=391476015 instance=ExtResource("2_g7sqe")]
 position = Vector2(970, 599)

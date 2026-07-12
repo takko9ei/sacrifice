@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="sacrifice"
-run/main_scene="uid://bhdnu2qxnbhvk"
+run/main_scene="uid://c2l1q3xpsacrf"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 

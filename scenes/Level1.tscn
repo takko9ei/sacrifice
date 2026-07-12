@@ -131,7 +131,7 @@ color = Color(0.35, 0.42, 0.5, 1)
 position = Vector2(1275, -406)
 action = 2
 concept_id = "fourthwall"
-message = "Press E to Sacrifice the Fourth Wall (Ends the game, unreversible)"
+message = "Press E to pass current level"
 
 [node name="SacrificeInput" parent="." unique_id=1959940742 instance=ExtResource("10")]
 
@@ -140,16 +140,14 @@ message = "Press E to Sacrifice the Fourth Wall (Ends the game, unreversible)"
 [node name="HUD" parent="." unique_id=181721205 instance=ExtResource("4")]
 
 [node name="EndingSequence" parent="." unique_id=2056844450 instance=ExtResource("7")]
-visible = false
 hud_fade_target_path = NodePath("../HUD/Layout")
-title_scene_path = "uid://c2l1q3xpsacrf"
+title_scene_path = "uid://cvxqb1ysmem20"
 skip_sequence = true
 
 [node name="Player" parent="." unique_id=1570455461 instance=ExtResource("1")]
 position = Vector2(-380, 260)
 
 [node name="IntroPrompt" type="Label" parent="." unique_id=921945553]
-visible = false
 offset_left = -570.0
 offset_top = 160.0
 offset_right = -190.0
