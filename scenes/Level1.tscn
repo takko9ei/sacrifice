@@ -141,7 +141,7 @@ message = "Press E to pass current level"
 
 [node name="EndingSequence" parent="." unique_id=2056844450 instance=ExtResource("7")]
 hud_fade_target_path = NodePath("../HUD/Layout")
-title_scene_path = "uid://cvxqb1ysmem20"
+next_scene_path = "uid://cvxqb1ysmem20"
 skip_sequence = true
 
 [node name="Player" parent="." unique_id=1570455461 instance=ExtResource("1")]

@@ -17,8 +17,8 @@ extends CanvasLayer
 @export var text_fade_duration: float = 1.0
 @export var text_hold_duration: float = 2.0
 @export var final_fade_duration: float = 1.0
-@export var return_to_title_delay: float = 1.0
-@export_file("*.tscn") var title_scene_path: String = "res://scenes/TitleScreen.tscn"
+@export var to_next_scene_delay: float = 1.0
+@export_file("*.tscn") var next_scene_path: String = "res://scenes/TitleScreen.tscn"
 @export var skip_sequence: bool = false
 
 @export var overlay_path: NodePath = ^"Overlay"
@@ -44,7 +44,7 @@ func _on_permanently_sacrificed(id: String) -> void:
 
 func _play_sequence() -> void:
 	if skip_sequence:
-		_return_to_title()
+		_to_next_scene()
 		return
 
 	get_tree().paused = true
@@ -57,11 +57,11 @@ func _play_sequence() -> void:
 	tween.tween_interval(text_hold_duration)
 	tween.tween_property(_label, "modulate:a", 0.0, final_fade_duration)
 	tween.parallel().tween_property(_overlay, "modulate:a", 1.0, final_fade_duration)
-	tween.tween_interval(return_to_title_delay)
-	tween.tween_callback(_return_to_title)
+	tween.tween_interval(to_next_scene_delay)
+	tween.tween_callback(_to_next_scene)
 
 
-func _return_to_title() -> void:
+func _to_next_scene() -> void:
 	Sacrifice.reset()
 	get_tree().paused = false
-	get_tree().change_scene_to_file(title_scene_path)
+	get_tree().change_scene_to_file(next_scene_path)

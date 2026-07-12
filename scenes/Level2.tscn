@@ -49,7 +49,7 @@ scale = Vector2(1, 9.18)
 
 [node name="EndingSequence" parent="." unique_id=501345834 instance=ExtResource("4_cd1f0")]
 visible = false
-title_scene_path = "uid://bhdnu2qxnbhvk"
+next_scene_path = "uid://bhdnu2qxnbhvk"
 skip_sequence = true
 
 [node name="SacrificeInput" parent="." unique_id=2115097994 instance=ExtResource("5_k83s3")]
