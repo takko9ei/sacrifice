@@ -13,7 +13,6 @@
 [ext_resource type="PackedScene" path="res://scenes/EndingSequence.tscn" id="11_ddxw6"]
 
 [node name="Level3" type="Node2D" unique_id=330906257]
-position = Vector2(0, 300)
 
 [node name="Altar" type="Node2D" parent="." unique_id=593289090]
 
@@ -183,7 +182,7 @@ size = Vector2(3000, 40)
 color = Color(0.15, 0.15, 0.18, 1)
 
 [node name="Player" parent="." unique_id=835160440 instance=ExtResource("3_turoa")]
-position = Vector2(-746, 1737)
+position = Vector2(-718, 1407)
 
 [node name="Blue" type="Node2D" parent="." unique_id=6794466]
 
