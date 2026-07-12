@@ -13,7 +13,7 @@
 [ext_resource type="SpriteFrames" uid="uid://c7xdhm3glpp76" path="res://assets/player/player_frames.tres" id="13"]
 [ext_resource type="SpriteFrames" uid="uid://bkx8s35b2dyul" path="res://assets/player/title_stand_frames.tres" id="14"]
 
-[node name="IntegrationLevel" type="Node2D" unique_id=505647333]
+[node name="Level1" type="Node2D" unique_id=505647333]
 script = ExtResource("12")
 gameplay_frames = ExtResource("13")
 locked_frames = ExtResource("14")
@@ -142,7 +142,7 @@ message = "Press E to Sacrifice the Fourth Wall (Ends the game, unreversible)"
 [node name="EndingSequence" parent="." unique_id=2056844450 instance=ExtResource("7")]
 visible = false
 hud_fade_target_path = NodePath("../HUD/Layout")
-title_scene_path = "res://scenes/RoomTemplate.tscn"
+title_scene_path = "uid://c2l1q3xpsacrf"
 skip_sequence = true
 
 [node name="Player" parent="." unique_id=1570455461 instance=ExtResource("1")]

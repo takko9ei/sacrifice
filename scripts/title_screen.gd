@@ -2,7 +2,7 @@ extends Node2D
 # Title screen controller: plays the title character animation, then visually
 # "sacrifices" the title screen before loading the integration level.
 
-@export_file("*.tscn") var next_scene_path: String = "res://scenes/IntegrationLevel.tscn"
+@export_file("*.tscn") var next_scene_path: String = "res://scenes/Level1.tscn"
 @export var crack_duration: float = 0.65
 @export var hold_after_crack: float = 0.12
 @export var title_label_path: NodePath = ^"TitleLayer/Title"

@@ -4,7 +4,7 @@ extends Node
 # SceneTree-level flag — neither resets on scene reload, so both must be
 # cleared explicitly here or the "fresh" reloaded scene would inherit stale
 # unlocked/active/permanent concepts and could still be frozen mid-ending.
-# process_mode is Always (see IntegrationLevel.tscn) so restart still works
+# process_mode is Always (see Level1.tscn) so restart still works
 # mid-ending.
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -1,0 +1,139 @@
+[gd_scene format=3 uid="uid://cvxqb1ysmem20"]
+
+[ext_resource type="Script" uid="uid://cc0cno6ncvnn2" path="res://scripts/room_template.gd" id="1_3aekd"]
+[ext_resource type="PackedScene" path="res://scenes/Ground.tscn" id="2_khw7m"]
+[ext_resource type="PackedScene" path="res://scenes/BlueObject.tscn" id="3_wd6ad"]
+[ext_resource type="PackedScene" path="res://scenes/EndingSequence.tscn" id="4_cd1f0"]
+[ext_resource type="PackedScene" path="res://scenes/SacrificeInput.tscn" id="5_k83s3"]
+[ext_resource type="PackedScene" path="res://scenes/RestartController.tscn" id="6_2jdof"]
+[ext_resource type="PackedScene" uid="uid://ckt6hlqlmj37f" path="res://scenes/Player.tscn" id="7_rfxww"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="8_2ax8h"]
+[ext_resource type="PackedScene" path="res://scenes/Altar.tscn" id="9_0roy1"]
+[ext_resource type="PackedScene" path="res://scenes/RedObject.tscn" id="10_epefj"]
+[ext_resource type="PackedScene" path="res://scenes/GreenObject.tscn" id="11_24quv"]
+[ext_resource type="PackedScene" path="res://scenes/HudCollapsePlatforms.tscn" id="12_h35wg"]
+
+[node name="Level2" type="Node2D" unique_id=1932247373]
+script = ExtResource("1_3aekd")
+
+[node name="Ground" parent="." unique_id=445163880 instance=ExtResource("2_khw7m")]
+position = Vector2(1984, 512)
+size = Vector2(5000, 40)
+
+[node name="Ground2" parent="." unique_id=1291323576 instance=ExtResource("2_khw7m")]
+position = Vector2(-496, 340)
+rotation = 1.5707964
+size = Vector2(300, 40)
+
+[node name="Ground3" parent="." unique_id=737447335 instance=ExtResource("2_khw7m")]
+position = Vector2(3360, 1183)
+rotation = 1.5707964
+size = Vector2(1300, 40)
+
+[node name="Ground4" parent="." unique_id=1419003281 instance=ExtResource("2_khw7m")]
+position = Vector2(3700, 1323)
+rotation = 1.5707964
+size = Vector2(1000, 40)
+
+[node name="Ground5" parent="." unique_id=10568051 instance=ExtResource("2_khw7m")]
+position = Vector2(4079, 843)
+rotation = -6.2831855
+size = Vector2(800, 40)
+
+[node name="Ground6" parent="." unique_id=71652490 instance=ExtResource("2_khw7m")]
+position = Vector2(4465, 676)
+rotation = 1.5707964
+size = Vector2(300, 40)
+
+[node name="BlueObject" parent="." unique_id=1748890064 instance=ExtResource("3_wd6ad")]
+position = Vector2(3700, 678)
+scale = Vector2(1, 9.18)
+
+[node name="EndingSequence" parent="." unique_id=501345834 instance=ExtResource("4_cd1f0")]
+title_scene_path = "res://scenes/Level3.tscn"
+
+[node name="SacrificeInput" parent="." unique_id=2115097994 instance=ExtResource("5_k83s3")]
+
+[node name="RestartController" parent="." unique_id=2091780662 instance=ExtResource("6_2jdof")]
+
+[node name="Player" parent="." unique_id=1287081948 instance=ExtResource("7_rfxww")]
+position = Vector2(2020, 466)
+
+[node name="Ground7" parent="." unique_id=954274015 instance=ExtResource("2_khw7m")]
+position = Vector2(4461, 340)
+rotation = 1.5707964
+size = Vector2(300, 40)
+
+[node name="HUD" parent="." unique_id=1649843945 instance=ExtResource("8_2ax8h")]
+
+[node name="Altar" parent="." unique_id=928764806 instance=ExtResource("9_0roy1")]
+position = Vector2(4230, 566)
+action = 2
+concept_id = "fourthwall"
+message = "press e to finish the game"
+
+[node name="Altar2" parent="." unique_id=1648304875 instance=ExtResource("9_0roy1")]
+position = Vector2(1678, 263)
+concept_id = "blue"
+message = "press e to sacrifice(get button 2)"
+
+[node name="Altar3" parent="." unique_id=873497333 instance=ExtResource("9_0roy1")]
+position = Vector2(2401, 258)
+concept_id = "gravity"
+message = "press e to sacrifice(unlock button 1)"
+
+[node name="Ground8" parent="." unique_id=1408690686 instance=ExtResource("2_khw7m")]
+position = Vector2(2715, 400)
+
+[node name="Ground9" parent="." unique_id=2080570215 instance=ExtResource("2_khw7m")]
+position = Vector2(2474, 314)
+
+[node name="BlueObject2" parent="." unique_id=1912591767 instance=ExtResource("3_wd6ad")]
+position = Vector2(2594, 295)
+scale = Vector2(1, 7.86)
+
+[node name="RedAltar" parent="." unique_id=1081547836 instance=ExtResource("9_0roy1")]
+position = Vector2(2850, 458)
+concept_id = "red"
+message = "Press E to Sacrifice Red (Press 3 to Clear Red, reversible)"
+
+[node name="RedObject" parent="." unique_id=632319736 instance=ExtResource("10_epefj")]
+position = Vector2(3000, 430)
+scale = Vector2(1, 6)
+
+[node name="GreenAltar" parent="." unique_id=792702199 instance=ExtResource("9_0roy1")]
+position = Vector2(3180, 458)
+concept_id = "green"
+message = "Press E to Sacrifice Green (Press 4 to Clear Green, reversible)"
+
+[node name="GreenObject" parent="." unique_id=1099194176 instance=ExtResource("11_24quv")]
+position = Vector2(3330, 430)
+scale = Vector2(1, 6)
+
+[node name="Ground10" parent="." unique_id=174887549 instance=ExtResource("2_khw7m")]
+position = Vector2(1678, 316)
+
+[node name="Altar5" parent="." unique_id=1245632872 instance=ExtResource("9_0roy1")]
+position = Vector2(2163, 458)
+action = 2
+concept_id = "hud"
+message = "press e to sacrifice hud"
+
+[node name="HudCollapsePlatforms" parent="." unique_id=1171978461 instance=ExtResource("12_h35wg")]
+position = Vector2(1810, 310)
+
+[node name="Marker2D" type="Marker2D" parent="HudCollapsePlatforms" unique_id=560576081]
+position = Vector2(54, 87)
+
+[node name="Ground11" parent="." unique_id=2010429381 instance=ExtResource("2_khw7m")]
+position = Vector2(4135, 170)
+
+[node name="Altar4" parent="." unique_id=1623290219 instance=ExtResource("9_0roy1")]
+position = Vector2(4136, 117)
+action = 1
+message = "press e to sacrifice jump for two button slots"
+
+[node name="Altar6" parent="." unique_id=1441195568 instance=ExtResource("9_0roy1")]
+position = Vector2(4136, 117)
+action = 2
+concept_id = "jump"

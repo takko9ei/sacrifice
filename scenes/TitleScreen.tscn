@@ -2,12 +2,15 @@
 
 [ext_resource type="Script" uid="uid://bi3u2heb6j54j" path="res://scripts/title_screen.gd" id="1"]
 [ext_resource type="SpriteFrames" uid="uid://bkx8s35b2dyul" path="res://assets/player/title_stand_frames.tres" id="2"]
-[ext_resource type="PackedScene" uid="uid://bkdctvarex6yi" path="res://scenes/IntegrationLevel.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://bkdctvarex6yi" path="res://scenes/Level1.tscn" id="3"]
 
 [node name="TitleScreen" type="Node2D" unique_id=220358780]
 script = ExtResource("1")
+next_scene_path = "uid://bkdctvarex6yi"
+preview_player_visual_path = NodePath("Level1Preview/Player/AnimatedSprite2D")
+preview_intro_prompt_path = NodePath("Level1Preview/IntroPrompt")
 
-[node name="IntegrationPreview" parent="." unique_id=60428317 instance=ExtResource("3")]
+[node name="Level1Preview" parent="." unique_id=60428317 instance=ExtResource("3")]
 process_mode = 4
 
 [node name="TitleLayer" type="CanvasLayer" parent="." unique_id=1518047593]

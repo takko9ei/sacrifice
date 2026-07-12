@@ -12,7 +12,7 @@
 [ext_resource type="PackedScene" path="res://scenes/RedObject.tscn" id="10_red"]
 [ext_resource type="PackedScene" path="res://scenes/GreenObject.tscn" id="11_green"]
 
-[node name="ColorLevel" type="Node2D" unique_id=330906257]
+[node name="Level3" type="Node2D" unique_id=330906257]
 position = Vector2(-2678, 300)
 
 [node name="Altar" type="Node2D" parent="." unique_id=593289090]
