@@ -1,17 +1,19 @@
 extends CharacterBody2D
 class_name Player
 # Player movement controller: ground/air acceleration+friction, split-gravity
-# jump (GDD §3.2), coyote time, jump buffer, variable jump height, and the
-# `gravity` sacrifice (GDD §2.6, §3.5). Every feel number comes from
-# `config` (PlayerConfig) — no hardcoded movement/jump numbers here
-# (CLAUDE.md rule 2). `blue` and other world-facing concepts are not the
-# player's concern (see blue_object.gd / GDD §7.6).
+# jump (GDD §3.2), coyote time, jump buffer, variable jump height, the
+# `gravity` sacrifice (GDD §2.6, §3.5), and a jump sound cue. Every feel
+# number comes from `config` (PlayerConfig) — no hardcoded movement/jump
+# numbers here (CLAUDE.md rule 2). `blue` and other world-facing concepts are
+# not the player's concern (see blue_object.gd / GDD §7.6). `jump_sound_path`
+# is optional — if the node is missing, jumping simply stays silent.
 
-@onready var jump_sound = $JumpSound
 @export var config: PlayerConfig
 @export var sprite_path: NodePath = ^"AnimatedSprite2D"
+@export var jump_sound_path: NodePath = ^"JumpSound"
 
 var _sprite: AnimatedSprite2D
+var _jump_sound: AudioStreamPlayer2D
 var _coyote_timer: float = 0.0
 var _jump_buffer_timer: float = 0.0
 var _facing_right: bool = true
@@ -22,6 +24,7 @@ func _ready() -> void:
 	if config == null:
 		config = PlayerConfig.new()
 	_sprite = get_node(sprite_path) as AnimatedSprite2D
+	_jump_sound = get_node_or_null(jump_sound_path) as AudioStreamPlayer2D
 	Sacrifice.concept_activated.connect(_on_concept_activated)
 	Sacrifice.concept_deactivated.connect(_on_concept_deactivated)
 
@@ -102,7 +105,8 @@ func _handle_jump_input(jump_velocity: float) -> void:
 	var grav_sign: float = _gravity_sign()
 	if _jump_buffer_timer > 0.0 and _coyote_timer > 0.0:
 		velocity.y = -jump_velocity * grav_sign
-		jump_sound.play()
+		if _jump_sound:
+			_jump_sound.play()
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
 	elif Input.is_action_just_released("jump") and velocity.y * grav_sign < 0.0:

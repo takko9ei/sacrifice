@@ -341,7 +341,9 @@ This edge case applies equally to any reversible concept with a "restores back t
 ### 9.1 MVP Scope (Hard Boundary)
 **Build**: the two reversible sacrifices `gravity`+`blue`, the single-slot constraint, the double-slot upgrade (priced at `jump`), the 6-room level (R1–R6), the `hud` UI-collapse set-piece, the `fourthwall` ending, the sacrifice-status HUD, basic toggle feedback and control prompts.
 
-**Don't build (explicitly excluded during the jam)**: combat AI/bosses, a 3rd or further reversible concept, a minimap, a proper pause/settings menu, the reserved-pool concepts (friction/time/sound), audio (BGM/SFX — see the project scope-change record in `DEV_STATUS.md`).
+**Don't build (explicitly excluded during the jam)**: combat AI/bosses, a minimap, a proper pause/settings menu, the reserved-pool concepts (friction/time/sound).
+
+**Post-MVP additions actually shipped (see `DEV_STATUS.md` for the up-to-date list)**: a title screen + intro-unlock sequence, the `red`/`green` reversible color-gate concepts (the §2.6 `blue` extension pattern, "etc." realized), and a minimal jump sound effect (BGM/other SFX remain out of scope — see `DEV_STATUS.md` §4 for the exact audio convention to follow if this is extended further).
 
 Addition order (only if the MVP finishes early and there's time to spare, in this order): a 3rd reversible concept (friction, high reusability) → more flavor lines/polish.
 
