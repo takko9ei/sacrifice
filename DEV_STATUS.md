@@ -2,147 +2,115 @@
 
 > **This file records "what the code actually looks like right now," not the GDD's ideal design.**
 > Design follows `GDD.md`; collaboration hard rules follow `CLAUDE.md`; **development progress follows this file.**
-> Every time a step is advanced or a change is completed, update the corresponding section of this file so the next person who picks this up (human or AI, with no memory of prior sessions) can know the current state without digging through the code.
+> Every time a change is completed, update the corresponding section of this file so the next person who picks this up (human or AI, with no memory of prior sessions) can know the current state without digging through the code.
+
+## 0. Project Status: **Development Complete**
+
+All of `DEV_PLAN_CORE.md`'s Steps 1–6 are done, plus several rounds of post-plan additions (title screen, a three-level chained structure, `red`/`green` concepts, audio, a redundant-code cleanup pass — all described below). There is no active "next step" — this file now documents a finished shipped state, not work in progress. If new work starts later (new concepts, new levels, art/audio passes), treat Section 6 ("Known Gaps / Possible Future Work") as the starting point, and keep updating this file as that work happens.
+
+---
 
 ## 1. One-Sentence Project Summary + Doc Index
 
-《Sacrifice》 is a Godot 4.x "subtractive Metroidvania": the player permanently or temporarily sacrifices abstract concepts (gravity, the color "blue," jump, the HUD, the fourth wall…) to get through places that were otherwise impassable — the further you play, the less you have, but the more places you can reach.
+《Sacrifice》 is a Godot 4.x "subtractive Metroidvania": the player permanently or temporarily sacrifices abstract concepts (gravity, colors, jump, the HUD, the fourth wall…) to get through places that were otherwise impassable — the further you play, the less you have, but the more places you can reach.
 
-- **`GDD.md`** — the sole design authority. Describes "what it should be."
-- **`DEV_PLAN_CORE.md`** — the breakdown of development steps (Steps 1–6). Describes "what order to build things in."
-- **`CLAUDE.md`** — AI collaboration hard rules (no git, no touching Project Settings, architectural hard rules, etc.). Describes "what the AI can and can't do."
+- **`GDD.md`** — the sole design authority. Describes "what it should be." Runs §0–§10 plus Appendices A/B, no gaps (renumbered after the original audio-exclusion section was removed).
+- **`DEV_PLAN_CORE.md`** — the original breakdown of build steps (Steps 1–6). Describes "what order things were built in" — a historical record; some of its architectural decisions (notably Step 5's single-scene plan) were later revisited, see Section 2.
+- **`CLAUDE.md`** — AI collaboration hard rules (no git, no touching Project Settings, architectural hard rules, etc.).
 - **`DEV_STATUS.md`** (this file) — describes "how far things have actually gotten, what it actually looks like, and what the gotchas are."
-- **`scenes/HOW_TO_BUILD_A_LEVEL.md`** — a build tutorial for the level designer (C), explaining "how to assemble a playable level from the existing prefabs" (available in Chinese/English/Japanese).
+- **`scenes/HOW_TO_BUILD_A_LEVEL.md`** — a build tutorial for extending the game with new levels/concepts (Chinese/English/Japanese).
+- **`scenes/change_point.md`** — a running changelog of feature-level changes, in the same trilingual format.
 
-**Rule of thumb for a cold-start session: design follows `GDD.md`; actual progress and behavior follow this file.** Where the two disagree, this file wins for "what currently exists," and the disagreement itself should be treated as a TODO to reconcile, not silently ignored.
-
----
-
-## 2. Completed Features (Step 1 → Step 5, plus two rounds of post-Step-5 additions)
-
-### Step 1 · Project Bootstrap + Feel Polish — ✅ Done
-
-- `Player.tscn` (CharacterBody2D + CollisionShape2D + AnimatedSprite2D placeholder frames + Camera2D) is a reusable prefab.
-- All feel values come from `tuning/default.tres` (a `PlayerConfig` resource), no hardcoding. **`jump_height` in `default.tres` is currently `150.0`** (the script default in `player_config.gd` is `64.0`, used only as a fallback if a `PlayerConfig` field is ever missing — the resource value is the one that governs actual feel). **This value has already drifted once before (it was previously `74.0`) — don't trust any single number from a doc long-term; re-read `tuning/default.tres` directly if the exact current feel value matters.**
-- Actual behavior: left/right movement with distinct ground/air acceleration and friction; split-gravity jump (different gravity for rise/fall); coyote time; jump buffering; holding jump for a higher jump, releasing early cuts it short (variable jump height); idle/run/jump/fall four-state animation switching based on `is_on_floor()` and velocity direction.
-
-### Step 2 · gravity + blue Reversible Sacrifices — ✅ Done
-
-- Pressing 1 toggles `gravity`: `Player.up_direction` flips between `Vector2.DOWN`/`Vector2.UP`, sprite `flip_v` syncs, the ceiling becomes "the floor," and jump direction automatically follows the flip direction (`_gravity_sign()` handles this uniformly — the physics code doesn't distinguish normal vs. flipped).
-- Pressing 2 toggles `blue`: `BlueObject` (`StaticBody2D` + `blue_object.gd`) listens to `Sacrifice` signals; when activated, collision is disabled (`set_deferred`) + it turns translucent; restoring reverses this.
-- Single-slot constraint: `Sacrifice.activate()` evicts the earliest-activated concept when `_active.size() >= max_slots`, so `gravity`/`blue` are naturally mutually exclusive (initial `max_slots = 1`).
-- Toggle feedback: `HUD.tscn`'s `FlashOverlay` (a white translucent ColorRect) flashes once per toggle (`hud.gd::_play_flash()`). This feedback is purely visual with no sound effect — the only audio anywhere in the project is the jump SFX (see Section 2's "Audio Reinstated" entry), and toggling a concept does not play a sound.
-
-### Step 3 · Altar System + Unlocking + Double Slot + Permanent Sacrifice of jump — ✅ Done
-
-- All concepts are locked by default (`Sacrifice._unlocked` is an empty dictionary); `sacrifice_input.gd` only allows toggling concepts for which `Sacrifice.is_unlocked(id)` is true.
-- `Altar.tscn` (`Area2D`, collision layer 0 / mask 2, only collides with the player layer) has three `Action`s: `UNLOCK` / `SET_SLOTS` / `PERMANENT_SACRIFICE`, all configurable in the Inspector, no code changes needed.
-- **Interact-confirm model**: entering an altar's range only shows a hint (the `Hint` Label); the `Sacrifice` command only actually triggers after pressing `interact` (E); a `one_shot` altar stops showing its hint and stops responding after triggering once. Two altars can be stacked at the same spot and trigger independently (this is exactly how the double-slot shrine works: `AltarDoubleSlots` (`SET_SLOTS`=2) + `AltarSacrificeJump` (`PERMANENT_SACRIFICE jump`) stacked at the same coordinates).
-- After permanently sacrificing `jump`, the condition `Input.is_action_just_pressed("jump") and not Sacrifice.is_permanently_sacrificed("jump")` in `player.gd::_update_timers()` permanently zeroes out the jump buffer, so the jump key silently stops working from then on (no error, no prompt, in keeping with the "increasingly empty" tone).
-
-### Step 4 · Both UI Sacrifices (hud / fourthwall) — ✅ Done; hud's effect **had its design changed partway through**
-
-**The project has exactly two UI sacrifices: `hud` and `fourthwall`.** A third, `pause`, existed briefly during early iteration (a standalone test altar that disabled Escape, never wired into the double-slot upgrade) and was fully removed before Step 5 — `pause_controller.gd`/`PauseController.tscn` are deleted, and every description of it in `GDD.md`/`DEV_PLAN_CORE.md` is gone. The one remaining trace is a stray, unused `pause` (Escape) entry in `project.godot`'s Input Map — see Section 5, item 3.
-
-- **HUD**: `hud.gd` (attached to `HUD.tscn`) is the icon version (not text). `SlotsRow` generates the corresponding number of slot squares based on `Sacrifice.max_slots` (filled color = in use, empty color = unused); `IconsRow` adds one icon per unlocked concept (gray = inactive, bright yellow = active); everything is driven by the `concept_unlocked`/`concept_activated`/`concept_deactivated`/`slots_changed` signals, with no querying of any state beyond that.
-- **Current state of `hud` (UI collapse) — the current, only implementation is "icons fall and become platforms"; the earlier "observation-collapse mechanism" design has been retired and deleted**:
-  - **Old design (fully retired, script deleted)**: a gate called the "observation-collapse mechanism" — solid and blocking before `hud` was sacrificed, passable afterward. The corresponding script `scripts/observation_gate.gd` has been deleted, and at the game-logic level **nothing** anywhere references or instantiates `ObservationGate.tscn`. The orphaned scene file `scenes/ObservationGate.tscn` itself had resurfaced on disk twice in past sessions (cause unknown — suspected local Godot editor caching/write-back behavior) and has been re-deleted each time; a fresh grep this session confirms it does **not** currently exist. If it turns up again, just delete it — it is a broken scene referencing a nonexistent script and nothing instantiates it.
-  - **Current implementation**: `hud_collapse_platforms.gd` (attached to `HudCollapsePlatforms.tscn`, a plain `Node2D`) listens to `Sacrifice.concept_permanently_sacrificed`; when it receives `id == "hud"`, it iterates over all of its own `Marker2D` child nodes and, at each Marker2D's position, constructs a `StaticBody2D` in code (collision layer 1, a rectangular collision shape + a same-sized `Polygon2D` visual), dropping it from `target_position + Vector2(0, -drop_height)` to the target position via a Tween (`TRANS_QUAD`/`EASE_IN`) — the effect being "HUD icons crash into the level and turn into a few steppable solid platforms." Landing spots are configured entirely by adding/moving `Marker2D` child nodes in the editor; there are no hardcoded coordinates in the script.
-    At the same time, `hud.gd::_on_permanently_sacrificed()` (calling `_dismantle()`) uses a Tween to fade out and hide `Layout` (the whole icons + slots UI block) when `id == "hud"` — `FlashOverlay` is deliberately left unaffected, because GDD §5.5 requires that after sacrificing hud, the player can still operate by "memory + on-screen feedback (the toggle flash)."
-  - The level demonstrating this mechanic is `Level1.tscn` (the R3 area, around x≈800~820): a drop that's simply unreachable by jumping/flipping alone; once the nearby `AltarHud` (`position≈(800,248)`, `action=PERMANENT_SACRIFICE`, `concept_id="hud"`) triggers, `HudCollapsePlatforms`'s two `Marker2D` children (`Drop1`/`Drop2`) fall in sequence to form steps, which combine with the existing `HudLedge` to form a stepped climb.
-- **Current state of `fourthwall` (ending)**: `ending_sequence.gd` (attached to `EndingSequence.tscn`, `layer = 10`, `process_mode = Always`) listens to `concept_permanently_sacrificed`; when `id == "fourthwall"`: `get_tree().paused = true` → a Tween sequence fades out the HUD in order (`hud_fade_target_path` is manually wired in the scene to `../HUD/Layout`) → the black `Overlay` fades in to `dissolve_alpha` (0.85, not fully black) → the text `Label` (default "Thank you for playing.") fades in → holds → the text fades out while `Overlay` continues fading to fully black (in parallel). Entirely visual throughout, never touching the OS window. `AltarFourthwall` is at `position = (1275, -406)` in `Level1.tscn`.
-  **⚠️ Behavior changed since the original Step 4 implementation, as part of the Title Screen addition (see the entry below): the ending no longer just holds on black waiting for a manual R restart.** After the final fade, it waits `to_next_scene_delay` (default `1.0s`) then calls `Sacrifice.reset()` → unpauses → `get_tree().change_scene_to_file(next_scene_path)` (`next_scene_path` defaults to `res://scenes/TitleScreen.tscn`), returning to the title screen automatically. An `@export var skip_sequence: bool` also exists — if true, `_play_sequence()` skips straight to `_to_next_scene()`. `RestartController`'s R-to-restart still works during normal play and mid-sequence (unchanged), it's just no longer the only way out of the ending.
-
-### Step 5 · Room Template + Single-Scene Integration Level — ✅ Done (no room-switching system; the user explicitly chose the single-scene approach)
-
-- **Scene decision**: `Level1.tscn` is designated as the **single official level**; any future content additions should extend/add areas on top of it. `scenes/TestRoom.tscn` (the old feel/mechanics test room) has been deleted and confirmed absent from disk this session (fresh grep, zero hits). It has resurfaced unexpectedly on disk more than once in the past for unknown reasons (suspected editor caching behavior) — if it's ever found present again, just delete it.
-- **(Historical, resolved)** At the time Step 5 was completed, `project.godot`'s `run/main_scene` had been left pointing at `scenes/Level2.tscn` instead of the real level, so F5 booted the bare template. A human has since repointed it — as of the "Round 2" entry below, `run/main_scene` is `TitleScreen.tscn`, which itself leads into `Level1.tscn`. See Section 7's "Main Scene" section for the current, correct behavior.
-- `Level2.tscn` + the comment-only script `room_template.gd`: a copyable template for C, consisting of one `Ground` (a `Ground.tscn` instance, layer 1) + one `ExampleAltar` (an `Altar.tscn` instance) + one `ExampleMechanism` (a `BlueObject.tscn` instance, stretched vertically to demonstrate scaling usage). A comment at the top of the script states: "Copy this scene, change the coordinates/`concept_id`, and that's a new room — don't touch sacrifice_manager.gd/altar.gd/blue_object.gd."
-- `Level1.tscn`: within a single scene, divides R1~R6 by coordinate ranges, chained in GDD §5.2 order (node names/positions confirmed against the actual scene file this session):
-  - **R1**: `R1Ground` + `R1Ceiling` + `AltarGravity` (position ≈(x,?) — gravity altar; unlocks `gravity`).
-  - **R2**: `R2Ledge`, a floating offset platform with no ground layer, forcing "flip up → walk off the edge → keep rising → flip back."
-  - **R3**: `R3Ground` + `AltarBlue` (unlocks `blue`) + `BlueWallR3` (position `(750, 244)`, `scale (1, 4)` — a vertically stretched blue wall). Within this area, the hud demo set-piece sits around x≈800~820: `AltarHud` + `HudCollapsePlatforms` (children `Drop1`/`Drop2`) + `HudLedge`.
-  - **R4**: `R4Ground` + the stacked `AltarDoubleSlots` (`SET_SLOTS 2`) + `AltarSacrificeJump` (`PERMANENT_SACRIFICE jump`) — the double-slot shrine.
-  - **R5**: `LeftWallR5`/`RightWallR5` (both `scale ≈ (1, 1.16)`, slightly taller than the original plan) form a vertical shaft; three tiers `BlueBarrier1/2/3` (all `scale (5, 1)`, at y = 150 / -50 / -250) span the shaft at different heights — with a single slot it's impossible to have `gravity`+`blue` on at once, so the player must first get the double slot in R4.
-  - **R6**: `R6Ground` + `AltarFourthwall` (`position (1275, -406)`, `PERMANENT_SACRIFICE fourthwall`) + an `EndingSequence` instance.
-  - Manually walked through room by room and confirmed (as of the last full walkthrough): **once the double slot is obtained in R4, the jump key is never needed all the way to R6** (satisfying the GDD §5.4 hard constraint); the R5 shaft has no solid floor inside it, so walking straight in without flipping only drops the player into the fall-back safety net (`SafetyFloor` at y=1000, plus `SafetyFloor2` at `position (500, -882)`, size `(2000, 40)`, covering the R5/R6 area) — there is no path that bypasses the puzzle.
-  - All node positions/scales above were re-verified directly against `scenes/Level1.tscn` this session and are the current real/authoritative layout, not values copied from an older doc.
-
-### After Step 5 · Prefab-ification Cleanup + Documentation Consistency Fixes — ✅ Done
-
-- **Audio note (superseded — see the "Audio (Jump SFX)" entry further below)**: at this point in the project's history, audio had been deliberately removed from scope entirely. That decision was later reversed (see below); this bullet is kept only so the history makes sense. The `sound` reserved-concept design text in the GDD is a description of a possible future silent-gameplay mechanic, unrelated to audio playback, and is intentionally kept regardless.
-- **Three prefabs extracted from what used to be inlined per-level objects**:
-  - `Ground.tscn` + `ground.gd` (`@tool`, `StaticBody2D`): a generic floor/platform/ceiling/wall prefab; `size`/`color` exports drive the collision shape (`RectangleShape2D`) and visible polygon (`Polygon2D`) to auto-sync, with a fresh `RectangleShape2D` created per instance (never a shared/mutated one) to avoid cross-instance collision-size pollution. All floors/platforms/walls in `Level2.tscn` and `Level1.tscn` are instances of this prefab.
-  - `SacrificeInput.tscn`: the `Node`+`sacrifice_input.gd` combo, extracted into a standalone, reusable scene (`bindings` dictionary still exported).
-  - `RestartController.tscn`: the `Node`+`restart_controller.gd` (`process_mode=Always`) combo, likewise extracted into a standalone scene.
-  - `HudCollapsePlatforms.tscn` was checked and already satisfies the "configurable landing-spot component" requirement (landing spots via level-added `Marker2D` children; `platform_size`/`color`/`drop_height`/`drop_duration` exported).
-- **Handoff document** `scenes/HOW_TO_BUILD_A_LEVEL.md` exists, aimed at level designers unfamiliar with the code: what a playable level needs at minimum, how to use each prefab, collision layer setup, how the altar's interact-confirm mechanic affects placement, the GDD §5.4/§7.7 hard constraints, a copyable minimal-level build example, and (added in a later pass) a worked explanation of exactly which `Concept Id` strings currently have a listener and which `Action` each pairs with. **This file is intentionally trilingual (Chinese/English/Japanese, each a full standalone copy in one file with a language-switcher at the top) — it is the one exception to "the rest of the project's docs are English-only."**
-- **GDD.md section numbering**: after the audio section was removed, sections were renumbered so the GDD now runs §0–§10 plus Appendices A/B, with no gaps and no leftover §11. All cross-references in `CLAUDE.md`/`DEV_PLAN_CORE.md`/this file use this current numbering.
-- **All four core docs (`GDD.md`, `DEV_PLAN_CORE.md`, `DEV_STATUS.md`, `CLAUDE.md`) were fully translated from Chinese to English** in a later pass, preserving every code identifier, file name, and GDD section number exactly. `scenes/HOW_TO_BUILD_A_LEVEL.md` was deliberately left trilingual rather than English-only (see above).
-
-(This entry records a scope change + cleanup pass inserted after Step 5 completed and before Step 6 formally began; it doesn't correspond to a specific numbered DEV_PLAN step.)
-
-### After Step 5, Round 2 · Title Screen + Intro-Unlock Gate + `red`/`green` Color Concepts + Audio Reinstated (Jump SFX) — ✅ Done, found already-implemented this session (not previously recorded in this file)
-
-This entry did not exist in the previous snapshot of this file — all of the following was found already built and working when this session re-verified the project against disk. Treat everything below as the authoritative current state; DEV_PLAN_CORE.md does not have a numbered step for any of it.
-
-- **Title screen added, and `run/main_scene` now correctly points to it**: `project.godot`'s `run/main_scene` is now `res://scenes/TitleScreen.tscn` — the previously-recorded "main scene points at Level2.tscn" problem (old Section 5 item 1) **no longer exists and has been removed from Known Issues below.**
-  - `TitleScreen.tscn` + `title_screen.gd`: shows the title character as a static "stand" animation (built at runtime from `stand_frame_paths`, four placeholder frames under `assets/player-stand/`) over a preview of the integration level, plus `Title`/`Prompt` labels and four corner `Shards`. Pressing `interact` plays a "crack apart" tween (labels fade, character moves/scales to `character_target_position`, the four shard ColorRects fly outward and fade) then calls `Sacrifice.reset()` (implicitly, via `_ready()` already having called it) and `change_scene_to_file(next_scene_path)` (`next_scene_path` defaults to `res://scenes/Level1.tscn`).
-  - `Sacrifice.reset()` is called in `title_screen.gd::_ready()`, so returning to the title screen (from the new ending auto-return, or a manual restart) always guarantees a clean slate before the next playthrough starts.
-- **Intro-unlock gate added to `Level1.tscn` itself**: `integration_intro.gd` is attached to the scene's root node (`Level1`, confirmed via `script = ExtResource("12")` on the root). On `_ready()`, it freezes the `Player` (`velocity = Vector2.ZERO`, `set_physics_process(false)`), swaps its sprite to the same static "stand" frames as the title screen, and shows an `IntroPrompt` label. Pressing `interact` triggers a "shatter" tween — the current stand frame is sliced into 4 quadrant `Sprite2D` shards that fly apart and fade — then swaps in `gameplay_frames`/`gameplay_animation`, fades the sprite in, and re-enables `_physics_process`. Net effect: the player arrives in the level still looking like the title-screen character, and "breaks free" into normal gameplay on the first `interact` press. This is a second, independent implementation of the same "shatter into shards" visual idea as `title_screen.gd`, not a shared component — if the effect ever needs tuning, both scripts must be updated separately (`_spawn_shards()`/`_sacrifice_title()` respectively).
-- **`red` and `green` reversible concepts added** (GDD §2.6's "can be extended into red/yellow/etc." note, realized with red/green instead): `sacrifice_input.gd`'s `bindings` now includes `"sacrifice_red": "red"` and `"sacrifice_green": "green"`, bound to keys 3/4 respectively in `project.godot`'s Input Map (confirmed this session). `RedObject.tscn`/`GreenObject.tscn` are both plain instances of the existing `blue_object.gd` script (no new code — exactly the copy-and-change-`concept_id` extension pattern `HOW_TO_BUILD_A_LEVEL.md` documents) with `concept_id = "red"` / `"green"` respectively. Neither concept has an unlock altar or any placed instances anywhere in `Level1.tscn` — they currently only exist inside `Level3.tscn` (see below).
-- **⚠️ `Level3.tscn` — a second, much larger full level, not wired into the actual game flow**: this is a standalone scene (not an extension of `Level1.tscn`) containing a full altar chain (gravity → red → green → blue → double-slot → jump → hud → fourthwall) plus a large amount of red/green/blue platform-and-wall content and its own `Player`/`HUD`/`SacrificeInput`/`RestartController`/`EndingSequence`/`HudCollapsePlatforms` instances. **Nothing in the live flow (`TitleScreen.tscn` → `Level1.tscn` → back to `TitleScreen.tscn` on ending) ever loads it.** The only reference to it anywhere in the project is a stray `next_scene_path = "res://scenes/Level3.tscn"` override on the `EndingSequence` instance inside `Level2.tscn` (a scene that is itself never instantiated/run as gameplay, only used as a copy-source template) — this looks like leftover debris from testing, not an intentional wire-up. **Open question for a human to resolve, not something the AI should guess at**: is `Level3.tscn` a work-in-progress replacement/expansion level that's meant to eventually replace or merge into `Level1.tscn`, or is it dead/experimental content that should be deleted? Until that's decided, don't build on top of either level assuming it's "the" level without checking which one is meant.
-- **Audio reinstated — this reverses the "no audio, full stop" decision recorded earlier in this file**: `Player.tscn` now has a `JumpSound` (`AudioStreamPlayer2D`) child playing `assets/audio/jump.wav`, triggered from `player.gd` on every successful jump (buffered or immediate). The wiring follows the same `@export NodePath` + null-guarded lookup convention as every other cross-node reference in the codebase: `@export var jump_sound_path: NodePath = ^"JumpSound"`, resolved via `get_node_or_null(...)` in `_ready()` into a typed `_jump_sound: AudioStreamPlayer2D`, and `_handle_jump_input()` only calls `.play()` if `_jump_sound` is non-null — so a `Player` instance missing the node just stays silent instead of erroring out `_ready()`. **This is the one and only audio in the project**: no BGM, no other SFX, no toggle/altar/ending sound. `GDD.md` §9.1 has been updated to reflect this (audio is no longer on the "don't build" list; it now lists what's actually shipped). If more audio is added later, follow this same NodePath + null-guard pattern rather than a bare `$NodeName` reference — that was flagged and fixed this session as not matching the rest of the codebase's defensive-null-check style.
+**Rule of thumb: design follows `GDD.md`; actual behavior follows this file.** Where the two disagree, this file wins for "what currently exists."
 
 ---
 
-## 3. Key File Inventory
+## 2. Architecture: Title Screen → Three Chained Levels → Title Screen
+
+**This is the single biggest architectural fact to know before touching anything.** The project does **not** use one continuous single scene the way `DEV_PLAN_CORE.md`'s Step 5 originally decided (that decision is now superseded — see the note in that file). Instead, the shipped game is **four separate scenes connected by `get_tree().change_scene_to_file()`**, forming a loop:
+
+```
+TitleScreen.tscn --(interact)--> Level1.tscn --(fourthwall altar)--> Level2.tscn --(fourthwall altar)--> Level3.tscn --(fourthwall altar)--> TitleScreen.tscn
+```
+
+- `project.godot`'s `run/main_scene` is `TitleScreen.tscn` (confirmed this session, resolves via `uid://c2l1q3xpsacrf`).
+- Each of `Level1.tscn`/`Level2.tscn`/`Level3.tscn` is a **fully self-contained playable scene**: its own `Player`, `HUD`, `SacrificeInput`, `RestartController`, and `EndingSequence` instances, plus its own set of `Altar`/`Ground`/reactive-object content. None of them share a camera or scene tree with each other.
+- The mechanism that chains them: every `EndingSequence` instance has an `@export_file("*.tscn") var next_scene_path` and an `@export var skip_sequence: bool` (see `ending_sequence.gd`, Section 4). When the level's `"fourthwall"` altar is triggered:
+  - `Level1.tscn`'s `EndingSequence` has `skip_sequence = true`, `next_scene_path` pointing at `Level2.tscn` — pressing the altar skips the fade/text entirely and jumps straight to `Level2.tscn`.
+  - `Level2.tscn`'s `EndingSequence` likewise has `skip_sequence = true`, `next_scene_path` pointing at `Level3.tscn`.
+  - `Level3.tscn`'s `EndingSequence` has **no override** — it uses the script default (`skip_sequence = false`, `next_scene_path = "res://scenes/TitleScreen.tscn"`), so reaching the end of `Level3` plays the **real** ending (HUD fade → black dissolve → "Thank you for playing." → hold → fade to black), then automatically returns to `TitleScreen.tscn`.
+  - `Sacrifice.reset()` is called every time `_to_next_scene()` runs (regardless of `skip_sequence`), so every level starts with a clean slate — concepts unlocked/active/permanently-sacrificed in one level do **not** carry over to the next.
+- `TitleScreen.tscn` also calls `Sacrifice.reset()` in its own `_ready()`, so landing back on the title screen (whether via the real ending or a manual `restart`) is always guaranteed clean.
+- Each level's altar that triggers this chain uses `concept_id = "fourthwall"` — the **same id** is reused in all three levels to mean "advance to the next scene," and only in `Level3` does it coincide with the GDD's literal "the game's true ending." This works correctly (thanks to the per-scene `Sacrifice.reset()`), but is a deliberate, known overload of one concept id across three different meanings — not a bug, just worth knowing before grepping for `"fourthwall"` and assuming every hit is "the ending."
+
+### Why this exists despite `DEV_PLAN_CORE.md` Step 5 saying "no room-switching, one continuous scene"
+That decision was the plan at the time Step 5 was executed, and the resulting single level (originally `IntegrationLevel.tscn`) is still exactly what `Level1.tscn` is today. Later, the project was extended by chaining two more full levels onto the end of it (`Level2.tscn`, originally the copyable `RoomTemplate.tscn`, repurposed into real content; `Level3.tscn`, originally `ColorLevel.tscn`, a large standalone level built separately and wired in afterward) using scene transitions — i.e., exactly the "room-switching" approach Step 5's decision explicitly ruled out. `DEV_PLAN_CORE.md` itself hasn't been rewritten (it's a historical build-order record, now annotated as superseded), but treat its single-scene framing as replaced by what's described in this section.
+
+---
+
+## 3. Each Level's Content
+
+All three levels reuse the exact same prefabs (`Ground.tscn`, `Altar.tscn`, `BlueObject.tscn`/`RedObject.tscn`/`GreenObject.tscn`, `HudCollapsePlatforms.tscn`, `SacrificeInput.tscn`, `RestartController.tscn`, `HUD.tscn`, `EndingSequence.tscn`, `Player.tscn`) — nothing level-specific was hardcoded outside `Inspector`-configured instances. The following is a structural summary from reading each scene file directly (not a manual playthrough — if the exact puzzle sequencing matters, open the scene in the editor).
+
+### `Level1.tscn` (the original Step 5 integration level; root has `integration_intro.gd` attached)
+- Divides content into R1–R6 by coordinate ranges (node names still say `R1Ground`, `R2Ledge`, etc.).
+- Concepts introduced: `gravity` (R1) → `blue` (R3) → `hud` permanently sacrificed (R3, drops `HudCollapsePlatforms` steps) → double slot + `jump` permanently sacrificed at the shrine (R4) → a blue vertical shaft requiring `gravity`+`blue` together (R5) → `fourthwall` altar (R6). This altar's hint text ("Press E to Sacrifice the Fourth Wall (Ends the game, unreversible)") describes the level's *original*, pre-chain behavior rather than what it does now (advances to `Level2`) — reviewed this session and intentionally left as-is by project decision.
+- Root node's `integration_intro.gd`: the player starts frozen, shown as the title-screen "stand" pose; pressing `interact` shatters that pose into 4 sprite-quadrant shards and hands control to the normal `Player`. See Section 4 for how this sources its `SpriteFrames`.
+- Bounded by a 3000×3000 square of `SafetyFloor`/`SafetyFloor2`/`SafetyFloorLeft`/`SafetyFloorRight` (the left/right walls are the same `Ground.tscn` prefab rotated 90°).
+- No `red`/`green` content anywhere in this level.
+
+### `Level2.tscn` (originally `RoomTemplate.tscn`; root now has **no script** — see Section 4)
+- A full altar chain in its own right: `fourthwall` (advance to `Level3`) → `blue` → `gravity` → `red` (`RedAltar`/`RedObject`) → `green` (`GreenAltar`/`GreenObject`) → `hud` (permanently sacrificed, drops one `HudCollapsePlatforms` platform) → a `SET_SLOTS` altar (`Altar4`) → `jump` permanently sacrificed (`Altar6`). Eleven `Ground`/`Ground2`…`Ground11` instances plus two `BlueObject`/`BlueObject2` instances make up the terrain.
+- This is the level formerly known as `RoomTemplate.tscn` — it used to be a non-gameplay copy-source template for level design, and the `room_template.gd` script that documented that role has been removed (it no longer applies; see Section 4). There is currently **no reusable "room template" scene anywhere in the project** — that deliverable was consumed when this scene was repurposed into real content. If a fresh copyable template is wanted later, it would need to be built from scratch (a plain `Node2D` + one `Ground` + one `Altar` + one `BlueObject`, per the pattern `HOW_TO_BUILD_A_LEVEL.md` already documents from scratch).
+
+### `Level3.tscn` (originally `ColorLevel.tscn`; root has no script)
+- The largest of the three: a full altar chain under an `Altar` group node (`AltarGravity`/`AltarRed`/`AltarGreen`/`AltarSlots`/`AltarJump`/`AltarHud`/`AltarSlot2`/`AltarFourthwall`/`AltarBlue` — note `AltarSlots` and `AltarSlot2` are two separate `SET_SLOTS` altars, both `action = 1`; this is the scene's existing structure, not something changed this session), a large amount of grouped terrain (`Ground`/`safety`), and three color-grouped reactive-object clusters (`Blue`, `Red`, `Green`, each with a dozen-plus wall/platform instances).
+- This is the level whose `EndingSequence` plays the real, full ending sequence and returns to `TitleScreen.tscn` — see Section 2.
+
+---
+
+## 4. Key File Inventory
 
 ### `scripts/`
+| File | Type | Responsibility |
+|---|---|---|
+| `sacrifice_manager.gd` | autoload `Sacrifice` | The single global source of sacrifice state and signals. See the public interface below. |
+| `player_config.gd` | `Resource`, `class_name PlayerConfig` | Container for the player's feel values (movement/jump/friction/coyote/buffer). |
+| `player.gd` | `CharacterBody2D`, `class_name Player` | Movement + split-gravity jump + `gravity` sacrifice response + animation state machine + jump SFX. `jump_sound_path: NodePath` (default `^"JumpSound"`) resolved via `get_node_or_null()` into a typed, null-guarded `_jump_sound: AudioStreamPlayer2D` — the only audio anywhere in the project. |
+| `blue_object.gd` | `StaticBody2D` (no `class_name`) | Generic reactive-object template: listens to the signal, toggles collision-disable + transparency based on its own `concept_id`. `blue`/`red`/`green` all use this same script with a different `concept_id`. |
+| `sacrifice_input.gd` | `Node` | `@export var bindings: Dictionary` maps input actions to concept_ids; currently `1→gravity, 2→blue, 3→red, 4→green`. |
+| `altar.gd` | `Area2D`, `class_name Altar` | Generic altar: shows a `Hint` prompt on entering range, triggers one of `UNLOCK`/`SET_SLOTS`/`PERMANENT_SACRIFICE` on `interact`; `one_shot` altars stop responding after one trigger. |
+| `hud.gd` | `CanvasLayer` | Icon-based status display (slots + concept icons, three states) + toggle-flash feedback + UI fade-out after `hud` is sacrificed. |
+| `ending_sequence.gd` | `CanvasLayer`, `process_mode = Always`, `layer = 10` | The `fourthwall` handler: HUD fade-out → black overlay → text → black screen (unless `skip_sequence`) → `Sacrifice.reset()` → `change_scene_to_file(next_scene_path)`. **Field names**: `next_scene_path` (was `title_scene_path`) and `_to_next_scene()` (was `_return_to_title()`) — renamed to reflect that this is now a generic "go to the next configured scene" mechanism used for level-to-level chaining, not literally always "return to the title." |
+| `restart_controller.gd` | `Node`, `process_mode = Always` | On `restart` (R): `Sacrifice.reset()` + unpause + reload the current scene. |
+| `hud_collapse_platforms.gd` | `Node2D` | After `hud` is permanently sacrificed, spawns one falling, one-time solid platform at each of its own `Marker2D` child positions. |
+| `ground.gd` | `StaticBody2D`, `@tool` | Reusable floor/platform/wall prefab; `size`/`color` exports keep the collision shape and visible polygon in sync. |
+| `title_screen.gd` | `Node2D` | Title screen: shows the title character in the "stand" pose over a non-interactive `Level1.tscn` preview; `interact` plays a shatter-tween then loads `next_scene_path` (default `Level1.tscn`). Calls `Sacrifice.reset()` on `_ready()`. |
+| `integration_intro.gd` | `Node`, attached to `Level1.tscn`'s root | Intro-unlock gate: freezes `Player`, shows the "stand" pose, `interact` shatters it into gameplay. |
 
-| File                        | Type                                                                                         | Responsibility                                                                                                                                                                                                                                                                                                                                     |
-| --------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sacrifice_manager.gd`      | autoload `Sacrifice`                                                                         | The single global source of sacrifice state and signals. See the public interface below.                                                                                                                                                                                                                                                           |
-| `player_config.gd`          | `Resource`, `class_name PlayerConfig`                                                        | Container for the player's feel values (movement/jump/friction/coyote/buffer).                                                                                                                                                                                                                                                                     |
-| `player.gd`                 | `CharacterBody2D`, `class_name Player`                                                       | Movement + split-gravity jump + `gravity` sacrifice response (flipping `up_direction`) + animation state machine + jump SFX (`_jump_sound`, see the "Audio Reinstated" entry in Section 2). `class_name Player` lets `altar.gd`/`integration_intro.gd` do `body is Player`/`as Player` checks.                                                     |
-| `blue_object.gd`            | `StaticBody2D` (no `class_name`, deliberately, to avoid name collisions when copied/renamed) | Generic reactive-object template: listens to the signal, toggles collision-disable + transparency based on its own `concept_id`. `blue` uses it as-is; `red`/`green` (`RedObject.tscn`/`GreenObject.tscn`) and any future concept copy it and change `concept_id`.                                                                                 |
-| `sacrifice_input.gd`        | `Node`                                                                                       | `@export var bindings: Dictionary` maps input action names to concept_ids; a key press triggers `Sacrifice.toggle()` (only for already-unlocked concepts). Attached to `SacrificeInput.tscn`. Currently maps keys 1–4 to `gravity`/`blue`/`red`/`green`.                                                                                           |
-| `altar.gd`                  | `Area2D`, `class_name Altar`                                                                 | Generic altar: shows the `Hint` prompt on entering its range, and only actually triggers one of `UNLOCK`/`SET_SLOTS`/`PERMANENT_SACRIFICE` when `interact` (E) is pressed; a `one_shot` altar stops showing/responding after triggering once.                                                                                                      |
-| `hud.gd`                    | `CanvasLayer`                                                                                | Icon-based status display (slots + concept icons, three states) + full-screen toggle-flash feedback + the UI fade-out/disintegration after sacrificing `hud` (`_dismantle()`).                                                                                                                                                                     |
-| `ending_sequence.gd`        | `CanvasLayer`, `process_mode = Always`, `layer = 10`                                         | The `fourthwall` ending: HUD fade-out → black overlay → text → black screen → auto-returns to `next_scene_path` (`TitleScreen.tscn` by default) after `to_next_scene_delay`, calling `Sacrifice.reset()` first. Purely visual until the scene change.                                                                                              |
-| `restart_controller.gd`     | `Node`, `process_mode = Always`                                                              | On `restart` (R): `Sacrifice.reset()` + unpause + reload the current scene. Attached to `RestartController.tscn`. Still works mid-ending; no longer the only way out of the ending (see `ending_sequence.gd`).                                                                                                                                     |
-| `hud_collapse_platforms.gd` | `Node2D`                                                                                     | After `hud` is permanently sacrificed, spawns one falling, one-time solid platform at each of its own `Marker2D` child node positions.                                                                                                                                                                                                             |
-| `ground.gd`                 | `StaticBody2D`, `@tool`                                                                      | Reusable floor/platform geometry block: `size`/`color` exports drive the collision shape (`RectangleShape2D`) and visible polygon (`Polygon2D`) to stay in sync, live in the editor. Attached to `Ground.tscn`.                                                                                                                                    |
-| `room_template.gd`          | `Node2D`, comment-only, no logic                                                             | Room-building instructions for the level designer, attached to `Level2.tscn`.                                                                                                                                                                                                                                                                      |
-| `title_screen.gd`           | `Node2D`                                                                                     | Title screen: static "stand" sprite + title/prompt labels over an `Level1` preview; `interact` plays a shatter-tween then `change_scene_to_file(next_scene_path)` (default `Level1.tscn`). Calls `Sacrifice.reset()` on `_ready()`. Attached to `TitleScreen.tscn`, which is the current `run/main_scene`.                                         |
-| `integration_intro.gd`      | `Node`, attached to `Level1.tscn`'s root                                                     | Intro-unlock gate: freezes `Player` and shows it in the title-screen "stand" pose with an `IntroPrompt`; `interact` shatters the pose into 4 quadrant shards, swaps in the real gameplay sprite/animation, and re-enables player physics. Independent implementation of the same shard-shatter idea as `title_screen.gd` (not a shared component). |
+**`scripts/room_template.gd` has been deleted** (along with its `.uid` sidecar) — it was a comment-only script whose entire content was "this scene is a copy-source template, don't add real gameplay to it," which became actively wrong once `Level2.tscn` (its one and only attachment point) was repurposed into a real level. See Section 3's `Level2.tscn` entry.
 
-**Confirmed absent this session** (should stay absent — if either reappears, delete it, it's a known "resurrecting file" phenomenon of unknown cause): `scripts/observation_gate.gd`, `scripts/pause_controller.gd`.
+**Stand-frame construction has been de-duplicated**: `title_screen.gd` and `integration_intro.gd` used to each independently rebuild an identical 4-frame "stand" `SpriteFrames` animation at runtime from raw PNGs (`_build_stand_frames()`, plus `stand_frame_paths`/`stand_animation_speed` exports, byte-for-byte duplicated in both scripts). A pre-baked resource with the exact same content, `assets/player/title_stand_frames.tres`, already existed and was already wired into both scenes but was being silently overridden/bypassed by the runtime-built version. The runtime-building code has been deleted from both scripts; `title_stand_frames.tres` (via `TitleScreen.tscn`'s `Character.sprite_frames` and `Level1.tscn`'s `locked_frames` export) is now the actual, sole source — no behavior change, just removed duplication and made the `.tres` non-dead.
+
+**Confirmed absent** (known "resurrecting files" from early sessions — if any reappear, delete them, cause unknown, suspected editor caching): `scripts/observation_gate.gd`, `scripts/pause_controller.gd`, `scenes/TestRoom.tscn`, `scenes/ObservationGate.tscn`. Also confirmed absent as of this session: any remaining reference anywhere in code to the old scene names `IntegrationLevel.tscn`/`RoomTemplate.tscn`/`ColorLevel.tscn` (fully renamed to `Level1`/`Level2`/`Level3`).
 
 ### `scenes/`
+| Scene | Notes |
+|---|---|
+| `Player.tscn` | `CharacterBody2D`(player.gd) + `CollisionShape2D` + `AnimatedSprite2D` + `Camera2D` + `JumpSound`(`AudioStreamPlayer2D`, plays `assets/audio/jump.wav`). `sprite_path` isn't serialized in the scene (uses the script default `^"AnimatedSprite2D"`, which matches). |
+| `Altar.tscn` | `Area2D`(layer 0/mask 2) + `CollisionShape2D`(48×64) + `Visual` + `Hint`(Label). |
+| `BlueObject.tscn` / `RedObject.tscn` / `GreenObject.tscn` | All three are the same structure running `blue_object.gd`, differing only in `concept_id` (`"blue"`/`"red"`/`"green"`) and visual color. |
+| `HUD.tscn` | `CanvasLayer`(hud.gd) — icon rows + slot rows + a full-screen `FlashOverlay`. |
+| `EndingSequence.tscn` | `CanvasLayer`(layer=10, process_mode=Always, ending_sequence.gd) — see Section 2 for the chaining mechanism. |
+| `HudCollapsePlatforms.tscn` | Bare `Node2D`; landing spots are `Marker2D` children added per level. |
+| `Ground.tscn` | Generic floor/platform/wall prefab. |
+| `SacrificeInput.tscn` / `RestartController.tscn` | Standalone input-handling prefabs, one instance per level. |
+| `TitleScreen.tscn` | The current `run/main_scene`. Contains a non-interactive `Level1.tscn` instance as a backdrop preview. |
+| `Level1.tscn` / `Level2.tscn` / `Level3.tscn` | The three chained levels — see Section 3. |
 
-| Scene                       | Structure                                                                                                                                                                                                                                                                      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Player.tscn`               | `CharacterBody2D`(player.gd) > `CollisionShape2D` + `AnimatedSprite2D`(placeholder frames) + `Camera2D` + `JumpSound`(`AudioStreamPlayer2D`)                                                                                                                                   | `config` points to `tuning/default.tres`; `collision_layer = 2`. The old "`sprite_path` serialized as literal `null`" issue is gone — the scene no longer serializes that property at all, so it correctly falls through to the script's default (`^"AnimatedSprite2D"`), matching the actual node name. `JumpSound` plays `assets/audio/jump.wav`, referenced by `player.gd` via `jump_sound_path` (see Section 2's "Audio Reinstated" entry). |
-| `Altar.tscn`                | `Area2D`(layer 0/mask 2, altar.gd) > `CollisionShape2D`(48×64 rectangle) + `Visual`(yellow Polygon2D) + `Hint`(Label, hidden by default)                                                                                                                                       | All three Actions rely on this one scene, configured via the Inspector.                                                                                                                                                                                                                                                                                                                                                                         |
-| `BlueObject.tscn`           | `StaticBody2D`(layer 1, blue_object.gd) > `CollisionShape2D`(32×32) + `Visual`(blue Polygon2D)                                                                                                                                                                                 | `concept_id` defaults to `"blue"`; change this field to reuse it for another concept.                                                                                                                                                                                                                                                                                                                                                           |
-| `RedObject.tscn`            | Same structure as `BlueObject.tscn`, same `blue_object.gd` script                                                                                                                                                                                                              | `concept_id = "red"`. Only placed inside `Level3.tscn` currently — no instances in `Level1.tscn`.                                                                                                                                                                                                                                                                                                                                               |
-| `GreenObject.tscn`          | Same structure as `BlueObject.tscn`, same `blue_object.gd` script                                                                                                                                                                                                              | `concept_id = "green"`. Only placed inside `Level3.tscn` currently — no instances in `Level1.tscn`.                                                                                                                                                                                                                                                                                                                                             |
-| `HUD.tscn`                  | `CanvasLayer`(hud.gd) > `Layout`(VBox) > `SlotsRow`+`IconsRow`(HBox); `FlashOverlay`(ColorRect, a sibling node)                                                                                                                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `EndingSequence.tscn`       | `CanvasLayer`(layer=10, process_mode=Always, ending_sequence.gd) > `Overlay`(black ColorRect) + `Label`                                                                                                                                                                        | Each level instance manually wires `hud_fade_target_path` to that level's own `HUD/Layout`, and can override `next_scene_path`/`skip_sequence`. Auto-returns to `next_scene_path` after the fade-out completes (see Section 2).                                                                                                                                                                                                                 |
-| `HudCollapsePlatforms.tscn` | bare `Node2D`(hud_collapse_platforms.gd), no default children                                                                                                                                                                                                                  | Each level instance adds its own `Marker2D` child nodes to set the landing spots.                                                                                                                                                                                                                                                                                                                                                               |
-| `Ground.tscn`               | `StaticBody2D`(layer 1, `ground.gd`) > `CollisionShape2D` + `Visual`(Polygon2D)                                                                                                                                                                                                | Generic floor/platform/ceiling/wall prefab; `size`/`color` exported; use the node's `scale` for an overall stretch.                                                                                                                                                                                                                                                                                                                             |
-| `SacrificeInput.tscn`       | `Node`(sacrifice_input.gd)                                                                                                                                                                                                                                                     | Standalone prefab; `bindings` dictionary editable in the Inspector.                                                                                                                                                                                                                                                                                                                                                                             |
-| `RestartController.tscn`    | `Node`(`process_mode=Always`, restart_controller.gd)                                                                                                                                                                                                                           | Standalone prefab; no adjustable parameters.                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `Level2.tscn`               | `Node2D`(room_template.gd) > `Ground`(a Ground.tscn instance) + `ExampleAltar` + `ExampleMechanism`                                                                                                                                                                            | The copy starting point for level design. **Not** the main scene (see `TitleScreen.tscn` below) — never instantiated as actual gameplay. Its bundled `EndingSequence` instance has a stray `next_scene_path` override pointing at `Level3.tscn`; see Section 2's "Audio Reinstated" entry sibling note on `Level3.tscn` and Section 5, item 4.                                                                                                  |
-| `TitleScreen.tscn`          | `Node2D`(title_screen.gd) > `IntegrationPreview`(an `Level1.tscn` instance used as backdrop) + `TitleLayer`(`CanvasLayer`) > `Shards`/`Title`/`Character`/`Prompt`                                                                                                             | **This is the current `run/main_scene`.** `interact` transitions to `Level1.tscn` (or whatever `next_scene_path` is set to).                                                                                                                                                                                                                                                                                                                    |
-| `Level1.tscn`               | Step 5's R1→R6 integration level, root has `integration_intro.gd` attached                                                                                                                                                                                                     | Reached via `TitleScreen.tscn`; see Section 2's Step 5 entry for the full room-by-room layout and the "Round 2" entry for the intro-gate behavior. All floors/platforms/ceilings/walls are `Ground.tscn` instances; `SacrificeInput`/`RestartController` nodes are instances of the corresponding prefabs. Does **not** contain any `red`/`green` content.                                                                                      |
-| `Level3.tscn`               | A second, large, standalone level — full altar chain (gravity→red→green→blue→double-slot→jump→hud→fourthwall) + its own `Player`/`HUD`/`SacrificeInput`/`RestartController`/`EndingSequence`/`HudCollapsePlatforms` + extensive `Blue`/`Red`/`Green` wall-and-platform content | **⚠️ Not reachable from the actual game flow.** See Section 2's "Round 2" entry and Section 5, item 4 — status (WIP replacement vs. dead content) needs a human decision.                                                                                                                                                                                                                                                                       |
+---
 
-**Confirmed absent this session** (known "resurrecting files" — if either is found present again, just delete it): `scenes/TestRoom.tscn`, `scenes/ObservationGate.tscn`.
-
-### `Sacrifice` Singleton Public Interface (`scripts/sacrifice_manager.gd`; the autoload name must be exactly `Sacrifice`)
-
+## 5. `Sacrifice` Singleton Public Interface (`scripts/sacrifice_manager.gd`; autoload name must be exactly `Sacrifice`)
 ```gdscript
 # Signals
 signal concept_activated(id: String)
@@ -151,130 +119,68 @@ signal concept_unlocked(id: String)
 signal slots_changed(new_slots: int)
 signal concept_permanently_sacrificed(id: String)
 
-# State (exposed read-only externally; writes only through the functions below)
+# State
 var max_slots: int = 1
 
 # Queries
 func is_unlocked(id: String) -> bool
 func is_active(id: String) -> bool
 func is_permanently_sacrificed(id: String) -> bool
-func get_active() -> Array[String]        # returns a copy
+func get_active() -> Array[String]
 func get_unlocked() -> Array[String]
 
 # Commands
-func unlock(id: String) -> void                    # idempotent, repeated calls don't re-fire the signal
-func activate(id: String) -> void                  # silently ignored if not unlocked / already permanently sacrificed / already active; evicts the earliest-activated one when over the slot limit
+func unlock(id: String) -> void
+func activate(id: String) -> void
 func deactivate(id: String) -> void
 func toggle(id: String) -> void
-func set_max_slots(n: int) -> void                  # evicts the excess (starting from the earliest-activated) when shrinking the slot count
-func permanently_sacrifice(id: String) -> void      # auto-deactivates first if currently active, then marks as permanent
-func reset() -> void                                # clears all state, resets slots to 1, meant to pair with a scene reload
+func set_max_slots(n: int) -> void
+func permanently_sacrifice(id: String) -> void
+func reset() -> void
 ```
 
-**Currently meaningful concept ids and which listens for each** (any other string id can technically be unlock/activate/permanently_sacrifice'd through the API without error, but nothing will visibly react unless a listener like the ones below exists for it):
+**Concept ids with a real listener:**
 
-| id             | Action it's used with | Listener                                                                                     |
-| -------------- | --------------------- | -------------------------------------------------------------------------------------------- |
-| `"gravity"`    | `UNLOCK`              | Hardcoded in `player.gd` (`if id != "gravity": return`)                                      |
-| `"blue"`       | `UNLOCK`              | `BlueObject.tscn` / `blue_object.gd` (default `concept_id`)                                  |
-| `"red"`        | `UNLOCK`              | `RedObject.tscn` / `blue_object.gd` (`concept_id = "red"`); only placed in `Level3.tscn`     |
-| `"green"`      | `UNLOCK`              | `GreenObject.tscn` / `blue_object.gd` (`concept_id = "green"`); only placed in `Level3.tscn` |
-| `"jump"`       | `PERMANENT_SACRIFICE` | Hardcoded in `player.gd` (`Sacrifice.is_permanently_sacrificed("jump")`)                     |
-| `"hud"`        | `PERMANENT_SACRIFICE` | `hud.gd` + `hud_collapse_platforms.gd`                                                       |
-| `"fourthwall"` | `PERMANENT_SACRIFICE` | `ending_sequence.gd`                                                                         |
-
----
-
-## 4. Current Architectural Conventions / Invariants (must not be broken)
-
-1. All sacrifice-related state lives only in the `Sacrifice` singleton (`sacrifice_manager.gd`); any other system interacts with it only through its signals/query functions — **never build a second global state holder**.
-2. All of the player's feel values come only from `PlayerConfig` (`tuning/default.tres`); `player.gd` must never contain a hardcoded movement/jump number.
-3. Unified pattern for "objects that react to a sacrifice": listen to the `Sacrifice` signal, filter by its own `concept_id`, following `blue_object.gd`; never add object-specific branches inside the `Sacrifice` singleton. `hud_collapse_platforms.gd` is the second template for this pattern (its response style is "spawning geometry" rather than "toggling geometry").
-4. The single-slot / double-slot / permanent-sacrifice rules are implemented only inside the `Sacrifice` singleton (`activate`/`set_max_slots`/`permanently_sacrifice`) — never reimplemented elsewhere.
-5. Collision layers: world entities (terrain, `Ground`, `BlueObject`, the hud collapse platforms) = Layer 1; the player = Layer 2; `Altar` is an `Area2D` with `collision_layer = 0` / `collision_mask = 2` (only detects the player entering, doesn't participate in physics collision).
-6. The autoload name must be exactly `Sacrifice` (capital S); currently in `project.godot` it's `Sacrifice="*uid://10vfev3uue5r"`, corresponding to `sacrifice_manager.gd` (confirmed this session).
-7. `Player` has `class_name Player`, dedicated to letting `altar.gd` and similar scripts do `body is Player` type checks; conversely, "object-side" scripts like `blue_object.gd` deliberately don't have a `class_name`, to avoid name collisions when copy-pasted and renamed.
-8. Nodes that need to keep working while `get_tree().paused = true` (`EndingSequence`, `RestartController`) always set `process_mode` to `3` (Always) — the project-wide, unified technique for "surviving across pause"; don't use any other method (e.g. manually checking the paused state) to work around the pause system.
-9. "Positions the level designer needs to place," such as altar landing spots or HUD collapse platform landing spots, are always configured via `Marker2D` child nodes or Inspector fields — never hardcode coordinates in a script (`hud_collapse_platforms.gd` is the demonstration of this convention).
-10. Floors/platforms/ceilings/walls always use `Ground.tscn` instances (`size`/`color` exported) — don't hand-write the `StaticBody2D`+`CollisionShape2D`+`Polygon2D` triple anymore; `ground.gd` is the sole place responsible for keeping the collision shape and visible polygon in sync.
-11. Audio is minimal and intentionally scoped to exactly one thing: `Player`'s jump SFX (`JumpSound`, an `AudioStreamPlayer2D` on `Player.tscn`, referenced from `player.gd` via `@export var jump_sound_path: NodePath` resolved with `get_node_or_null()` into a typed, null-guarded `_jump_sound`). This reverses an earlier "no audio at all" decision recorded in this file's history — see Section 2's "Audio Reinstated" entry — and `GDD.md` §9.1 has been updated to match. There is still no BGM and no other SFX. If audio is extended further, follow the same `@export NodePath` + null-guard pattern (consistent with item 9 below), not a bare `$NodeName` reference — the original jump-sound code did that and was fixed for exactly this reason.
-12. AI assistant hard rules (from `CLAUDE.md`, reiterated here): no git operations of any kind; no modifying Project Settings (autoload/Input Map/main scene are configured manually by a human — this is why the stray `pause` Input Map entry in Section 5, item 3 has to be cleaned up by a human, not by the AI); only work within the scope of the current DEV_PLAN step.
+| id | Action | Listener |
+|---|---|---|
+| `"gravity"` | `UNLOCK` | Hardcoded in `player.gd` |
+| `"blue"` | `UNLOCK` | `BlueObject.tscn` / `blue_object.gd` |
+| `"red"` | `UNLOCK` | `RedObject.tscn` / `blue_object.gd`; placed in `Level2` and `Level3` (not `Level1`) |
+| `"green"` | `UNLOCK` | `GreenObject.tscn` / `blue_object.gd`; placed in `Level2` and `Level3` (not `Level1`) |
+| `"jump"` | `PERMANENT_SACRIFICE` | Hardcoded in `player.gd` |
+| `"hud"` | `PERMANENT_SACRIFICE` | `hud.gd` + `hud_collapse_platforms.gd`; present in all three levels |
+| `"fourthwall"` | `PERMANENT_SACRIFICE` | `ending_sequence.gd`; present in all three levels, means "advance to next scene" in `Level1`/`Level2` and "real ending" only in `Level3` (see Section 2) |
 
 ---
 
-## 5. Known Issues / Workarounds / TODOs
+## 6. Known Gaps / Possible Future Work
 
-**The old item 1 here (`run/main_scene` pointing at `Level2.tscn` instead of the real level) is resolved** — `run/main_scene` now correctly points to `TitleScreen.tscn`, which itself transitions into `Level1.tscn`. **The old sprite_path-serialized-as-null item is also resolved** — `Player.tscn` no longer serializes that property at all, so it correctly uses the script default. Neither is listed below anymore.
+These are not bugs blocking anything — the game is complete and playable start to finish. They're just open items that would need attention if work resumes:
 
-1. **`sacrifice_input.gd`'s UID warning (low priority, purely a console notice, doesn't affect functionality)**: the `ext_resource` reference to `sacrifice_input.gd` in `SacrificeInput.tscn` occasionally gets its `uid=` attribute rewritten back to a stale value by the editor, causing an "invalid UID... using text path instead" warning in the console. Suspected to be an in-memory `ResourceUID` cache issue inside the editor process; "Reload Current Project" doesn't clear it — a full quit and restart of the Godot editor is theoretically needed. The game itself loads fine via the text-path fallback; this is purely console noise.
-2. **The altar's `Hint` prompt isn't forced to the top layer and may be occluded by foreground objects in the level**: `Hint` is a plain `Label` inside the 2D scene tree in `Altar.tscn` (floating above the altar), not a `CanvasLayer`, with no `z_index` bump or dedicated UI layer. If a room design stacks another foreground object at the same screen position directly above an altar, the hint text may be visually occluded. Deferred (post-MVP could move it to a `CanvasLayer` or add a `z_index`); during level design, just avoid this kind of stacking to sidestep it.
-3. **The `pause` sacrifice gameplay has been removed entirely, but the `pause` (Escape) action definition in the Input Map is still there**: per the `CLAUDE.md` hard rules, Project Settings can only be changed manually by a human in the editor, so the AI can't delete this stray binding. **This is expected and harmless: no script currently listens to it, and pressing Escape does nothing.** If a human wants to clean it up, they need to delete this row in the editor's Input Map panel themselves.
-4. **`Level3.tscn`'s status is undecided (found this session, needs a human decision, not something the AI should resolve unilaterally)**: it's a full, large, standalone level with `red`/`green` content and its own complete altar chain, but nothing in the live `TitleScreen.tscn` → `Level1.tscn` flow ever loads it — its only reference anywhere is a stray `next_scene_path` override on `Level2.tscn`'s bundled `EndingSequence` instance, which looks like leftover debris rather than an intentional wire-up. See Section 2's "Round 2" entry for the full description. Until a human decides whether this is WIP content meant to replace/absorb `Level1.tscn`, an abandoned experiment, or something else, don't assume either level is "the" canonical one without checking.
-5. **`tuning/default.tres`'s `jump_height` has already changed once outside of a documented dev step (currently `150.0`)**: this isn't necessarily a bug — feel tuning is expected to move — but it means **this file's numbers for tunable values can silently go stale**; always re-read `tuning/default.tres` directly rather than trusting a cached number if the exact current feel matters for a task.
-6. **Two files have a history of unexplained resurrection on disk**: `scenes/TestRoom.tscn` and `scenes/ObservationGate.tscn` have each, on separate past occasions, reappeared on disk after being deleted, for reasons never identified (suspected local Godot editor caching/auto-write-back behavior, not manual human restoration). Both are confirmed absent as of this session's grep. If either turns up again: `TestRoom.tscn` should not exist now that `Level1.tscn` is the intended single level, and `ObservationGate.tscn` references a script that no longer exists and is instantiated nowhere — in both cases, just delete the file.
-
----
-
-## 6. What's Next
-
-**Current progress: Step 5 is complete, plus two rounds of post-Step-5 work not tied to a numbered DEV_PLAN step** (prefab-ification/doc-consistency cleanup, then the title screen/intro-gate/`red`+`green`/audio round described in Section 2). **Step 6 has not formally begun.**
-
-**Nothing is currently blocking Step 6 from a Project Settings standpoint** — the `run/main_scene` issue that used to block it is resolved (see Section 5's header note). The one open item that should be resolved before Step 6 wraps up is **`Level3.tscn`'s status** (Section 5, item 4) — a human needs to decide whether it's meant to replace/absorb `Level1.tscn`, get merged into it, or be deleted, since Step 6's "polish + handoff" work should target whichever level is actually canonical.
-
-**Step 6 (polish + handoff packaging) — per `DEV_PLAN_CORE.md`, this step is polish and packaging only.** Audio is no longer categorically out of scope (see Section 4, item 11) but is still deliberately minimal — don't add BGM or additional SFX as part of Step 6 polish without checking first. TODO items:
-
-- Give the existing feedback effects — toggle tint, ending disintegration — a pass to see if they need tweaking.
-- Decide and document `Level3.tscn`'s fate (see above) before finalizing the handoff level reference.
-- Assemble the handoff documentation bundle (see below).
-
-**What needs to be ready to hand to B (gimmicks/mechanisms, extending new concepts)**:
-
-- Two directly copyable reactive-object templates: `BlueObject.tscn` (the toggle-collision + transparency type) and `HudCollapsePlatforms.tscn` (the spawn-geometry-on-sacrifice type). `RedObject.tscn`/`GreenObject.tscn` are worked examples of the same template already copied for a new `concept_id`.
-- A write-up on "how to add a new concept": copy the template → change `concept_id` → place a `UNLOCK`-type `Altar` → add a line to `SacrificeInput.bindings` for the key binding (GDD §7.6 "extension pattern").
-- Make clear that the reserved concepts (`friction`/`time`/`sound`) are to be implemented by B, reusing the pattern of the two templates above.
-- `red`/`green` are unlocked (as concepts) but have no altars placed in `Level1.tscn` and no puzzle built around them yet — that placement/puzzle work is still open, whether in `Level1.tscn` or in resolving `Level3.tscn`'s status (Section 5, item 4).
-
-**What needs to be ready to hand to C (map/level design)**:
-
-- Usage notes for `Level2.tscn` + `room_template.gd`, and `scenes/HOW_TO_BUILD_A_LEVEL.md` (already delivered, trilingual — see Section 2's "After Step 5" entry).
-- The prefabs `Ground.tscn`/`SacrificeInput.tscn`/`RestartController.tscn` — usage is covered in `HOW_TO_BUILD_A_LEVEL.md`.
-- How to configure `Altar.tscn`'s three `Action`s in the Inspector, and specifically which `Concept Id` strings currently do something (see the table in Section 3).
-- One reference full level: `Level1.tscn`, reached by running the game normally from `TitleScreen.tscn` (the current `run/main_scene`), or playable directly by opening it in the editor and using "Run Current Scene."
-- Direction for extending the level: lengthen/add areas within this same `Level1.tscn` scene, rather than splitting into multiple independent scenes connected by transitions — the project has formally abandoned the room-switching-system approach. **Resolve `Level3.tscn`'s status first (Section 5, item 4)** — extending the wrong level would be wasted work.
-- Two hard constraints that must be followed: GDD §5.4 (after sacrificing `jump` for the double slot, the player must never be required to press jump all the way to the end) and GDD §7.7 (don't design a puzzle that requires "restoring blue while inside a blue wall").
+1. **No reusable "room template" scene exists anymore** (Section 3's `Level2.tscn` note) — building a 4th level or reworking an existing one currently means copying node structure by hand rather than from a dedicated template.
+2. **`Level1`'s `fourthwall` altar hint text is stale** ("Ends the game, unreversible") relative to its actual behavior (advances to `Level2`) — reviewed and intentionally left as-is by project decision.
+3. **`Altar.triggered` signal is declared and emitted but has no listeners anywhere** — harmless dead code.
+4. **`Level2`'s `EndingSequence` instance doesn't set `hud_fade_target_path`** (unlike `Level1`/`Level3`, which both wire it to `../HUD/Layout`) — invisible today since `skip_sequence = true` skips that step entirely; would silently no-op the HUD fade if `skip_sequence` were ever turned off there without also adding this.
+5. **`project.godot`'s Input Map still has an unused `pause` (Escape) action** — nothing listens to it; harmless; can only be removed by a human in the editor (Project Settings are off-limits to the AI per `CLAUDE.md`).
+6. **`tuning/default.tres`'s `jump_height` (currently `150.0`) has drifted before** — always re-read the file directly rather than trusting a cached number.
+7. **The altar `Hint` label isn't a `CanvasLayer`** and can in principle be occluded by foreground level geometry stacked at the same screen position — avoid that kind of stacking when placing altars.
 
 ---
 
 ## 7. Input Mapping & How to Run It
 
-### Input Map (`project.godot`'s current actual configuration, re-verified this session)
+| Action | Key |
+|---|---|
+| `move_left` / `move_right` | A / D |
+| `jump` | Space |
+| `sacrifice_gravity` | 1 |
+| `sacrifice_blue` | 2 |
+| `sacrifice_red` | 3 |
+| `sacrifice_green` | 4 |
+| `interact` | E |
+| `restart` | R |
+| *(`pause` exists in the Input Map but nothing listens to it)* | Escape |
 
-| Action name         | Bound key |
-| ------------------- | --------- |
-| `move_left`         | A         |
-| `move_right`        | D         |
-| `jump`              | Space     |
-| `sacrifice_gravity` | 1         |
-| `sacrifice_blue`    | 2         |
-| `sacrifice_red`     | 3         |
-| `sacrifice_green`   | 4         |
-| `interact`          | E         |
-| `restart`           | R         |
+**Running the game**: F5 boots `TitleScreen.tscn` (`run/main_scene`, `uid://c2l1q3xpsacrf`). `interact` (E) at the title enters `Level1.tscn`; another `interact` breaks the intro-gate pose into normal gameplay. Reaching each level's `fourthwall` altar and pressing `interact` advances to the next level; `Level3`'s ending plays in full and returns to the title screen. `R` resets and reloads the current level at any point, including mid-ending.
 
-(The Input Map also still has a `pause` (Escape) action defined, but no script listens to it — see Section 5, item 3.)
-
-### Main Scene
-
-`project.godot`'s `run/main_scene` is `res://scenes/TitleScreen.tscn`. **Pressing F5 now correctly boots the title screen**, which transitions to `scenes/Level1.tscn` on `interact`. The full playable flow is: `TitleScreen.tscn` → (interact) → `Level1.tscn` (starts with its own intro-unlock gate, another `interact` to actually move) → R1→R6 → the `fourthwall` ending → auto-returns to `TitleScreen.tscn`. `Level3.tscn` is not part of this flow (see Section 5, item 4).
-
-### autoload
-
-`Sacrifice = "*uid://10vfev3uue5r"`, corresponding to `scripts/sacrifice_manager.gd`.
-
-### Restarting with R
-
-`restart_controller.gd` (`process_mode = Always`, attached via a `RestartController.tscn` instance in `Level1.tscn`) listens for the `restart` action: it calls `Sacrifice.reset()` (clears all unlocked/active/permanently-sacrificed concepts, resets slots to 1) → `get_tree().paused = false` (prevents getting stuck in the ending's black-screen paused state) → `get_tree().reload_current_scene()`. Because `Sacrifice` is an autoload and `paused` is a SceneTree-level flag, neither resets automatically on scene reload, so these two steps are mandatory and can't be skipped. R can also be pressed to restart while the ending is playing.
-
-### Ending → Title Auto-Return
-
-Separately from R, reaching the `fourthwall` ending now also returns to `TitleScreen.tscn` on its own after the sequence finishes (see Section 2's "Round 2" entry and `ending_sequence.gd`'s `_to_next_scene()`), calling `Sacrifice.reset()` first for the same reason `restart_controller.gd` does. `title_screen.gd::_ready()` also calls `Sacrifice.reset()` again, so the title screen is always a guaranteed clean slate regardless of which path led back to it.
+**Autoload**: `Sacrifice = "*uid://10vfev3uue5r"` → `scripts/sacrifice_manager.gd`.

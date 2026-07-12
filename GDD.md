@@ -72,6 +72,8 @@ Partway through, the player gets the "double slot" upgrade via an altar (`max_sl
 |---|---|---|---|---|---|---|
 | `gravity` | Reversible | Falling; instead "falls" upward | Walk on ceilings, go up through vertical shafts | A shaft with no footholds | Standing ground below loses meaning; can't actively go down | **MVP** |
 | `blue` | Reversible | The solidity of blue objects | Pass through blue walls/doors | A blue barrier | Can't stand on blue platforms, can't press blue switches | **MVP** |
+| `red` | Reversible | The solidity of red objects | Pass through red walls/doors | A red barrier | Can't stand on red platforms, can't press red switches | **Shipped** (post-MVP; §2.6's `blue` extension pattern, "red/yellow/etc." realized as red) |
+| `green` | Reversible | The solidity of green objects | Pass through green walls/doors | A green barrier | Can't stand on green platforms, can't press green switches | **Shipped** (post-MVP; same extension pattern) |
 | `jump` | Permanent | The ability to jump | Trades for the "double slot" upgrade | — (acts as the upgrade's price) | Loses the normal means of vertical movement | **MVP** |
 | `hud` | Permanent | The ability to see your own sacrifice state | At the moment of sacrifice, the HUD icons fall into the level and crash into fixed solid platforms, steppable to reach places previously out of reach | A high ledge/gap that's out of reach | Must rely on memory and screen feedback to judge current state | **MVP** |
 | `fourthwall` | Permanent | The integrity of the game as a "game" | "Getting out" (the ending) | — (the final exit) | The game ends | **MVP (ending)** |
@@ -211,6 +213,8 @@ The following 6-room flow is the authoritative goal for the Demo. The official l
 - **R6 exit · ending (~40s)**: a sealed exit + the final altar, demanding the `fourthwall` sacrifice; the UI disintegrates, the demo ends.
 
 One playthrough takes about 5 minutes (7–8 minutes for a first-timer).
+
+**Post-MVP: the shipped build extends past this R1–R6 flow.** The R1–R6 flow above is still exactly what the first of three chained levels (`Level1.tscn`) plays out — its `fourthwall` altar was originally "the ending" as described here, but now instead advances to a second full level (`Level2.tscn`, introducing `red`/`green` alongside repeats of `gravity`/`blue`/`hud`/the double-slot/`jump`), which in turn advances to a third, larger level (`Level3.tscn`, combining all six concepts including `red`/`green` into one bigger space). Only `Level3`'s ending is the literal, final "getting out" moment this section describes; `Level1`'s and `Level2`'s `fourthwall` altars now mean "advance to the next level" instead. See `DEV_STATUS.md` §2 for the exact chaining mechanism and §3 for each level's content — this section's per-room narrative (teach → test → threshold → key → breakthrough) was not re-authored room-by-room for `Level2`/`Level3`, only the concept/altar inventory is confirmed.
 
 ### 5.3 Gate-to-Key Correspondence Table
 | Gate / obstacle | Location | Required sacrifice | Required slots |

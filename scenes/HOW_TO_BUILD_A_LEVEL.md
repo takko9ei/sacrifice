@@ -62,15 +62,17 @@
 
 `Concept Id` 在代码里就是一个普通字符串字段（`@export var concept_id: String`），Inspector 只给你一个文本框，**不会有下拉菜单，也不会校验拼写**——填错字不会报错，只会"什么都不发生"，是这里最容易踩的坑。
 
-`Sacrifice` 单例本身对字符串没有任何白名单，任何 id 都能正常 unlock/activate/permanently_sacrifice。但**要让这个 id 真正产生游戏效果，必须有别的物体在监听它**。当前项目里只有下面 5 个 id 有对应的监听者：
+`Sacrifice` 单例本身对字符串没有任何白名单，任何 id 都能正常 unlock/activate/permanently_sacrifice。但**要让这个 id 真正产生游戏效果，必须有别的物体在监听它**。当前项目里只有下面 7 个 id 有对应的监听者：
 
 | id             | 该配哪种 `Action`     | 效果实现在哪                                                                         |
 | -------------- | --------------------- | ------------------------------------------------------------------------------------ |
 | `"gravity"`    | `UNLOCK`              | `player.gd` 里写死判断 `if id != "gravity": return`，翻转重力/`up_direction`         |
 | `"blue"`       | `UNLOCK`              | `BlueObject.tscn`（`blue_object.gd`），其 `concept_id` 字段默认就是 `"blue"`         |
+| `"red"`        | `UNLOCK`              | `RedObject.tscn`（`blue_object.gd`），`concept_id = "red"`——直接复制 `BlueObject.tscn` 改个 id/颜色 |
+| `"green"`      | `UNLOCK`              | `GreenObject.tscn`（`blue_object.gd`），`concept_id = "green"`——同样的做法 |
 | `"jump"`       | `PERMANENT_SACRIFICE` | `player.gd` 里写死判断 `Sacrifice.is_permanently_sacrificed("jump")`，让跳跃缓冲失效 |
 | `"hud"`        | `PERMANENT_SACRIFICE` | `hud.gd`（界面淡出）+ `hud_collapse_platforms.gd`（坠落平台）                        |
-| `"fourthwall"` | `PERMANENT_SACRIFICE` | `ending_sequence.gd`（结局序列）                                                     |
+| `"fourthwall"` | `PERMANENT_SACRIFICE` | `ending_sequence.gd`——见下方对应小节；在成品游戏里这个 id 现在也可能表示"进入下一关"，不只是"真正的结局" |
 
 `"gravity"`/`"blue"` 只能配 `UNLOCK`（且要在 `SacrificeInput.tscn` 的 `Bindings` 里配好对应按键，见下方 `SacrificeInput.tscn` 一节）；`"jump"`/`"hud"`/`"fourthwall"` 只能配 `PERMANENT_SACRIFICE`——填到别的 `Action` 上没有任何监听者响应，等于白填。
 
@@ -111,10 +113,11 @@
 - 每个可独立运行/测试的场景放一个即可，没有可调参数。
 - 作用：按 `restart` 键时清空所有牺牲状态并重载当前场景。
 
-### `EndingSequence.tscn` —— fourthwall 结局
+### `EndingSequence.tscn` —— fourthwall 结局，以及关卡间的串联
 
-- 只在包含最终祭坛（`PERMANENT_SACRIFICE fourthwall`）的关卡里放一个。
+- 只在包含 `fourthwall` 祭坛（`PERMANENT_SACRIFICE fourthwall`）的关卡里放一个。
 - 放好之后必须手动把它的 `Hud Fade Target Path` 字段接到本关卡自己的 `HUD` 节点下的 `Layout`（例如 `../HUD/Layout`），否则结局播放时 HUD 不会正确淡出。
+- 还有两个字段决定"结局之后去哪"：`Next Scene Path`（下一个要加载的 `.tscn`，默认是 `TitleScreen.tscn`）和 `Skip Sequence`（设成 `true` 会完全跳过淡出/文字，直接跳转到 `Next Scene Path`）。成品游戏就是靠这个机制把三关串起来的——`Level1.tscn` 和 `Level2.tscn` 都把 `Skip Sequence` 设成 `true`，`Next Scene Path` 指向下一关；`Level3.tscn` 两个字段都保持默认值，所以真正的结局演出会完整播放，播完自动回到标题画面。如果以后要加第 4 关，需要自己判断它是"中间过渡关"（`Skip Sequence = true` + 指向下一关）还是"新的真结局"（两个字段保持默认，或者把 `Next Scene Path` 指向它结束后该去的地方）。
 
 ---
 
@@ -220,15 +223,17 @@ Entering its range only shows the hint text; the player must press `interact` (d
 
 In code, `Concept Id` is just a plain string field (`@export var concept_id: String`). The Inspector only gives you a text box — **no dropdown, and no spelling validation**. A typo won't throw an error; it will just silently do nothing, which is the easiest trap to fall into here.
 
-The `Sacrifice` singleton itself has no whitelist for strings — any id can be unlocked/activated/permanently sacrificed without error. But **for an id to actually produce a gameplay effect, some other object must be listening for it**. Currently only these 5 ids have a matching listener in the project:
+The `Sacrifice` singleton itself has no whitelist for strings — any id can be unlocked/activated/permanently sacrificed without error. But **for an id to actually produce a gameplay effect, some other object must be listening for it**. Currently only these 7 ids have a matching listener in the project:
 
 | id             | Which `Action` it belongs with | Where the effect is implemented                                                                  |
 | -------------- | ------------------------------ | ------------------------------------------------------------------------------------------------ |
 | `"gravity"`    | `UNLOCK`                       | Hardcoded in `player.gd`: `if id != "gravity": return`, flips gravity/`up_direction`             |
 | `"blue"`       | `UNLOCK`                       | `BlueObject.tscn` (`blue_object.gd`), whose `concept_id` field defaults to `"blue"`              |
+| `"red"`        | `UNLOCK`                       | `RedObject.tscn` (`blue_object.gd`), `concept_id = "red"` — a straight copy of `BlueObject.tscn` with a different id/color |
+| `"green"`      | `UNLOCK`                       | `GreenObject.tscn` (`blue_object.gd`), `concept_id = "green"` — same pattern |
 | `"jump"`       | `PERMANENT_SACRIFICE`          | Hardcoded in `player.gd`: `Sacrifice.is_permanently_sacrificed("jump")` disables the jump buffer |
 | `"hud"`        | `PERMANENT_SACRIFICE`          | `hud.gd` (UI fade-out) + `hud_collapse_platforms.gd` (falling platforms)                         |
-| `"fourthwall"` | `PERMANENT_SACRIFICE`          | `ending_sequence.gd` (ending sequence)                                                           |
+| `"fourthwall"` | `PERMANENT_SACRIFICE`          | `ending_sequence.gd` — see that section below; in the shipped game this id also means "advance to the next level," not only "the final ending" |
 
 `"gravity"`/`"blue"` only make sense with `UNLOCK` (and need a matching key binding in `SacrificeInput.tscn`'s `Bindings`, see the `SacrificeInput.tscn` section below); `"jump"`/`"hud"`/`"fourthwall"` only make sense with `PERMANENT_SACRIFICE` — putting them on any other `Action` has no listener responding, i.e. it's a no-op.
 
@@ -269,10 +274,11 @@ A typo in any one of the three silently breaks the effect without an error — a
 - Place one in every independently runnable/testable scene; no adjustable parameters.
 - Effect: pressing the `restart` key clears all sacrifice state and reloads the current scene.
 
-### `EndingSequence.tscn` — The fourthwall ending
+### `EndingSequence.tscn` — The fourthwall ending, and level-to-level chaining
 
-- Only place one in the level containing the final altar (`PERMANENT_SACRIFICE fourthwall`).
+- Only place one in the level containing the `fourthwall` altar (`PERMANENT_SACRIFICE fourthwall`).
 - After placing it, you must manually wire its `Hud Fade Target Path` field to this level's own `HUD` node's `Layout` (e.g. `../HUD/Layout`), or the HUD won't fade out correctly during the ending.
+- Two more fields control what happens after: `Next Scene Path` (which `.tscn` to load next; defaults to `TitleScreen.tscn`) and `Skip Sequence` (if `true`, the fade/text is skipped entirely and it jumps straight to `Next Scene Path`). The shipped game chains three levels this way — `Level1.tscn` and `Level2.tscn` both set `Skip Sequence = true` and point `Next Scene Path` at the next level, while `Level3.tscn` leaves both at their defaults so the real ending plays and returns to the title screen. If you add a 4th level, decide whether it's an intermediate hop (`Skip Sequence = true` + point at the next level) or the new true ending (leave both at default, or point `Next Scene Path` at whatever should follow it).
 
 ---
 
@@ -378,15 +384,17 @@ That's the minimal loop: floor + player + one altar + one gimmick. Stack more al
 
 コード上、`Concept Id` はただの文字列フィールド（`@export var concept_id: String`）である。Inspector はテキストボックスを表示するだけで、**ドロップダウンもスペルチェックもない**——入力ミスをしてもエラーにはならず、ただ「何も起きない」だけになる。これが最も陥りやすい罠である。
 
-`Sacrifice` シングルトン自体は文字列に対して一切のホワイトリストを持たない——どんな id でも unlock/activate/permanently_sacrifice できてしまう。しかし**その id が実際にゲーム上の効果を生むには、それを監視している別のオブジェクトが必要**である。現在のプロジェクトで対応するリスナーがあるのは、次の5つの id だけである：
+`Sacrifice` シングルトン自体は文字列に対して一切のホワイトリストを持たない——どんな id でも unlock/activate/permanently_sacrifice できてしまう。しかし**その id が実際にゲーム上の効果を生むには、それを監視している別のオブジェクトが必要**である。現在のプロジェクトで対応するリスナーがあるのは、次の7つの id だけである：
 
 | id             | どの `Action` に対応するか | 効果の実装箇所                                                                                                        |
 | -------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `"gravity"`    | `UNLOCK`                   | `player.gd` にハードコードされた判定 `if id != "gravity": return` により重力/`up_direction` を反転させる              |
 | `"blue"`       | `UNLOCK`                   | `BlueObject.tscn`（`blue_object.gd`）。その `concept_id` フィールドはデフォルトで `"blue"`                            |
+| `"red"`        | `UNLOCK`                   | `RedObject.tscn`（`blue_object.gd`）、`concept_id = "red"`——`BlueObject.tscn` を id/色だけ変えて複製したもの |
+| `"green"`      | `UNLOCK`                   | `GreenObject.tscn`（`blue_object.gd`）、`concept_id = "green"`——同様のパターン |
 | `"jump"`       | `PERMANENT_SACRIFICE`      | `player.gd` にハードコードされた判定 `Sacrifice.is_permanently_sacrificed("jump")` によりジャンプバッファを無効化する |
 | `"hud"`        | `PERMANENT_SACRIFICE`      | `hud.gd`（UI のフェードアウト）+ `hud_collapse_platforms.gd`（落下する足場）                                          |
-| `"fourthwall"` | `PERMANENT_SACRIFICE`      | `ending_sequence.gd`（エンディング演出）                                                                              |
+| `"fourthwall"` | `PERMANENT_SACRIFICE`      | `ending_sequence.gd`——下記の該当節を参照。完成版ではこの id が「次のレベルへ進む」ことを意味する場合もあり、「本当のエンディング」だけを指すわけではない |
 
 `"gravity"`/`"blue"` は `UNLOCK` としてのみ意味を持つ（また `SacrificeInput.tscn` の `Bindings` に対応するキー割り当てが必要。下記の `SacrificeInput.tscn` の節を参照）。`"jump"`/`"hud"`/`"fourthwall"` は `PERMANENT_SACRIFICE` としてのみ意味を持つ——それ以外の `Action` に入れても、反応するリスナーが存在しないため何も起きない。
 
@@ -427,10 +435,11 @@ That's the minimal loop: floor + player + one altar + one gimmick. Stack more al
 - 独立して実行/テストできるシーンごとに1つ置けばよく、調整可能なパラメータはない。
 - 効果：`restart` キーを押すと、すべての犠牲状態をクリアし現在のシーンをリロードする。
 
-### `EndingSequence.tscn` —— fourthwall エンディング
+### `EndingSequence.tscn` —— fourthwall エンディングとレベル間の連結
 
-- 最終祭壇（`PERMANENT_SACRIFICE fourthwall`）を含むレベルにのみ1つ配置する。
+- `fourthwall` 祭壇（`PERMANENT_SACRIFICE fourthwall`）を含むレベルにのみ1つ配置する。
 - 配置後は、`Hud Fade Target Path` フィールドを手動でそのレベル自身の `HUD` ノード配下の `Layout`（例：`../HUD/Layout`）に接続する必要がある。接続しないと、エンディング再生時に HUD が正しくフェードアウトしない。
+- さらに2つのフィールドが「その後どこへ行くか」を決める：`Next Scene Path`（次に読み込む `.tscn`、デフォルトは `TitleScreen.tscn`）と `Skip Sequence`（`true` にするとフェード/テキストを完全に省略し、`Next Scene Path` へ直接遷移する）。完成版のゲームはこの仕組みで3つのレベルを連結している——`Level1.tscn` と `Level2.tscn` はどちらも `Skip Sequence = true` にして `Next Scene Path` を次のレベルに向け、`Level3.tscn` は両方ともデフォルトのままにしているため、本当のエンディング演出が最後まで再生されタイトル画面へ戻る。4つ目のレベルを追加する場合は、それが中間の通過点（`Skip Sequence = true` ＋次のレベルを指定）なのか、新しい本当のエンディング（両方デフォルトのまま、または `Next Scene Path` をその後に続くものへ向ける）なのかを判断すること。
 
 ---
 

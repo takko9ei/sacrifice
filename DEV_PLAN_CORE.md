@@ -1,5 +1,7 @@
 # Core Development Steps (Your Part) · Vibe Coding Edition
 
+> **Status: all steps below are complete; development is finished.** This file remains as the historical build-order record. For the actual final state (which extends past what's described here — see Step 5's superseded note below), read `DEV_STATUS.md` first.
+
 > Companion docs: `GDD.md` (authoritative design), `DEV_STATUS.md` (current actual state), `scenes/HOW_TO_BUILD_A_LEVEL.md` (build tutorial for level designers)
 > Your goal: produce a version that is **roughly playable and contains all core mechanics**, then hand it off to whoever does gimmicks and whoever does the map.
 > Team split: you = game core / B = gimmicks (mechanisms and extension concepts) / C = map building.
@@ -155,6 +157,8 @@ What you hand off isn't "a pile of code" — it's **a set of Inspector-tweakable
 ---
 
 ## Step 5: Single-Scene Integration Level + Room Template (one big session)
+
+**⚠️ Superseded — kept as a historical record, not current architecture.** The "no room-switching, one continuous scene" decision below was later reversed: the shipped, complete game is three separate chained scenes (`Level1.tscn`/`Level2.tscn`/`Level3.tscn`) connected via `get_tree().change_scene_to_file()` — exactly the room-switching approach this step ruled out. `Level2.tscn` (the room template referenced below) was itself later repurposed into a real, played level rather than staying a copy-source template. See `DEV_STATUS.md` §2 and §3 for the actual final architecture and content. The text below is left unmodified as a record of the decision made at the time.
 
 **Goal**: assemble a **rough** integration level, chained together in a single scene, covering every mechanic from start to finish, and give C a copyable room template — proving all the mechanics can be strung together into a full clear.
 

@@ -47,6 +47,15 @@
 - `Level2.tscn` 中放置了一个红色祭坛、一个红色对象、一个绿色祭坛、一个绿色对象。
 - 红色与绿色祭坛不是独立场景，而是现有 `Altar.tscn` 的实例。
 
+## 6. 场景重命名 + 关卡串联收尾 + 代码清理
+
+- 场景改名：`IntegrationLevel.tscn` → `Level1.tscn`，`RoomTemplate.tscn` → `Level2.tscn`，`ColorLevel.tscn` → `Level3.tscn`。
+- 三关正式串成一条线：`TitleScreen.tscn` → `Level1.tscn` → `Level2.tscn` → `Level3.tscn` → 回到 `TitleScreen.tscn`。串联方式是给每一关的 `fourthwall` 祭坛配一个 `EndingSequence`，`Level1`/`Level2` 把 `Skip Sequence` 设成 `true`、`Next Scene Path` 指向下一关；只有 `Level3` 保留默认值，播放真正的结局演出后回到标题画面。
+- `ending_sequence.gd` 的字段改名：`title_scene_path` → `next_scene_path`，`_return_to_title()` → `_to_next_scene()`，反映它现在是"去下一个配置好的场景"而不总是"回标题"。
+- `title_screen.gd`/`integration_intro.gd` 里各自重复实现的运行时拼帧函数 `_build_stand_frames()`（以及配套的 `stand_frame_paths`/`stand_animation_speed` 两个导出字段）已删除，统一改用早就存在但一直被覆盖掉的预烘焙资源 `assets/player/title_stand_frames.tres`。
+- `Level2.tscn`（原 `RoomTemplate.tscn`）根节点上的 `room_template.gd` 已摘除并删除该脚本文件——这个场景已经变成正式关卡，不再是给关卡设计者复制用的模板，脚本里"这是模板，别塞真机关"的说明已经不适用。
+- 开发状态：所有计划内容已完成，项目进入"开发完成"状态，详见 `DEV_STATUS.md`。
+
 ---
 
 <a id="lang-en"></a>
@@ -94,6 +103,15 @@
 - `Level2.tscn` now contains one red altar, one red object, one green altar, and one green object.
 - The red and green altars are not separate scenes; they are instances of the existing `Altar.tscn`.
 
+## 6. Scene Rename + Final Level Chaining + Code Cleanup
+
+- Scenes renamed: `IntegrationLevel.tscn` → `Level1.tscn`, `RoomTemplate.tscn` → `Level2.tscn`, `ColorLevel.tscn` → `Level3.tscn`.
+- The three levels are now formally chained into one loop: `TitleScreen.tscn` → `Level1.tscn` → `Level2.tscn` → `Level3.tscn` → back to `TitleScreen.tscn`. Chaining works by giving each level's `fourthwall` altar an `EndingSequence`; `Level1`/`Level2` set `Skip Sequence = true` with `Next Scene Path` pointing at the next level, while only `Level3` keeps the defaults, so it plays the real ending sequence and returns to the title screen.
+- `ending_sequence.gd`'s fields were renamed: `title_scene_path` → `next_scene_path`, `_return_to_title()` → `_to_next_scene()`, reflecting that it now means "go to whichever scene is configured next," not always "return to the title."
+- The duplicated runtime frame-building function `_build_stand_frames()` (and its `stand_frame_paths`/`stand_animation_speed` exports), independently implemented in both `title_screen.gd` and `integration_intro.gd`, has been removed. Both now use the pre-baked `assets/player/title_stand_frames.tres` resource that already existed but was being silently overridden.
+- `room_template.gd` has been detached from `Level2.tscn`'s root node (originally `RoomTemplate.tscn`) and deleted — that scene is now a real, played level rather than a copy-source template, so the script's "this is a template, don't add real gameplay" comment no longer applied.
+- Development status: all planned content is complete; the project is now in a "development complete" state — see `DEV_STATUS.md`.
+
 ---
 
 <a id="lang-ja"></a>
@@ -140,3 +158,12 @@
 - `scripts/sacrifice_input.gd` に `red` と `green` の切り替え設定を追加した。
 - `Level2.tscn` に赤の祭壇、赤のオブジェクト、緑の祭壇、緑のオブジェクトを1つずつ配置した。
 - 赤と緑の祭壇は専用シーンではなく、既存の `Altar.tscn` のインスタンスとして再現している。
+
+## 6. シーンのリネーム + レベル連結の完成 + コードの整理
+
+- シーン名を変更：`IntegrationLevel.tscn` → `Level1.tscn`、`RoomTemplate.tscn` → `Level2.tscn`、`ColorLevel.tscn` → `Level3.tscn`。
+- 3つのレベルが正式に1つのループとして連結された：`TitleScreen.tscn` → `Level1.tscn` → `Level2.tscn` → `Level3.tscn` → `TitleScreen.tscn` に戻る。連結の仕組みは各レベルの `fourthwall` 祭壇に `EndingSequence` を設定すること——`Level1`/`Level2` は `Skip Sequence = true` にして `Next Scene Path` を次のレベルへ向け、`Level3` だけはデフォルトのままにして本当のエンディング演出を最後まで再生し、タイトル画面へ戻る。
+- `ending_sequence.gd` のフィールド名を変更：`title_scene_path` → `next_scene_path`、`_return_to_title()` → `_to_next_scene()`。常に「タイトルに戻る」わけではなく「設定された次のシーンへ行く」ことを表すようにした。
+- `title_screen.gd` と `integration_intro.gd` にそれぞれ重複して実装されていた、実行時にフレームを組み立てる関数 `_build_stand_frames()`（および付随する `stand_frame_paths`/`stand_animation_speed` の2つのエクスポートフィールド）を削除した。両スクリプトとも、以前から存在していたが常に上書きされていた事前ビルド済みリソース `assets/player/title_stand_frames.tres` を使うように統一した。
+- `Level2.tscn`（元 `RoomTemplate.tscn`）のルートノードから `room_template.gd` を外し、スクリプト自体も削除した——このシーンはすでにコピー用テンプレートではなく実際にプレイされる本編レベルになっており、「これはテンプレートなので本物のギミックを入れないこと」というスクリプトの説明はもはや当てはまらない。
+- 開発状況：計画されていた内容はすべて完了し、プロジェクトは「開発完了」の状態に入った。詳細は `DEV_STATUS.md` を参照。
