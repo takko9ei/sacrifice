@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/SacrificeInput.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/RestartController.tscn" id="11"]
 [ext_resource type="Script" uid="uid://by2twbo8qdu2r" path="res://scripts/integration_intro.gd" id="12"]
-[ext_resource type="SpriteFrames" path="res://assets/player/player_frames.tres" id="13"]
+[ext_resource type="SpriteFrames" uid="uid://c7xdhm3glpp76" path="res://assets/player/player_frames.tres" id="13"]
 [ext_resource type="SpriteFrames" uid="uid://bkx8s35b2dyul" path="res://assets/player/title_stand_frames.tres" id="14"]
 
 [node name="IntegrationLevel" type="Node2D" unique_id=505647333]
@@ -78,13 +78,13 @@ concept_id = "hud"
 message = "Press E to Sacrifice the HUD (Removes status UI, drops bonus platforms, unreversible)"
 
 [node name="HudCollapsePlatforms" parent="." unique_id=936883279 instance=ExtResource("8")]
-position = Vector2(820, 280)
+position = Vector2(818, 101)
 
 [node name="Drop1" type="Marker2D" parent="HudCollapsePlatforms" unique_id=1106128079]
-position = Vector2(0, -70)
+position = Vector2(-132, 0)
 
 [node name="Drop2" type="Marker2D" parent="HudCollapsePlatforms" unique_id=2079765738]
-position = Vector2(0, -135)
+position = Vector2(121, -1)
 
 [node name="R4Ground" parent="." unique_id=530009135 instance=ExtResource("9")]
 position = Vector2(1050, 300)
@@ -140,6 +140,7 @@ message = "Press E to Sacrifice the Fourth Wall (Ends the game, unreversible)"
 [node name="HUD" parent="." unique_id=181721205 instance=ExtResource("4")]
 
 [node name="EndingSequence" parent="." unique_id=2056844450 instance=ExtResource("7")]
+visible = false
 hud_fade_target_path = NodePath("../HUD/Layout")
 title_scene_path = "res://scenes/RoomTemplate.tscn"
 skip_sequence = true
